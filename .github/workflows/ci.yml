@@ -31,9 +31,6 @@ jobs:
   app:
     name: Expo app
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,8 +38,6 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install
-        run: npm ci --prefix ..
+        run: npm ci
       - name: Typecheck
-        run: npx tsc --noEmit
-      - name: Expo doctor
-        run: npx expo-doctor || true
+        run: npm run typecheck
