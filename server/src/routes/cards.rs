@@ -132,7 +132,31 @@ pub async fn detail(
     let project_id = card_project(&state, id).await?;
     ensure_member(&state, project_id, user_id).await?;
     let card = fetch_card(&state, id).await?;
-    Ok(Json(serde_json::json!({ "card": card })))
+
+    let members = sqlx::query(
+        r#"SELECT m.user_id, u.name, u.email, m.role
+           FROM project_members m JOIN users u ON u.id = m.user_id
+           WHERE m.project_id = ?"#,
+    )
+    .bind(project_id)
+    .fetch_all(&state.db)
+    .await?;
+    let members: Vec<Value> = members
+        .iter()
+        .map(|r| {
+            serde_json::json!({
+                "user_id": r.get::<i64, _>("user_id"),
+                "name": r.get::<String, _>("name"),
+                "email": r.get::<String, _>("email"),
+                "role": r.get::<String, _>("role"),
+            })
+        })
+        .collect();
+
+    Ok(Json(serde_json::json!({
+        "card": card,
+        "members": members,
+    })))
 }
 
 #[derive(Debug, Deserialize, Default)]

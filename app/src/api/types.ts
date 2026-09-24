@@ -95,6 +95,11 @@ export interface BoardMember {
   role: Role;
 }
 
+export interface CardDetail {
+  card: Card;
+  members: BoardMember[];
+}
+
 export interface BoardDetail {
   board: Board;
   columns: { column: Column; cards: Card[] }[];
