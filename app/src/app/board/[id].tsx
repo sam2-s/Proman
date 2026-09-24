@@ -30,6 +30,8 @@ export default function BoardScreen() {
   const [newColumnName, setNewColumnName] = useState('');
   const [quickAddCol, setQuickAddCol] = useState<number | null>(null);
   const [quickTitle, setQuickTitle] = useState('');
+  const [editingCol, setEditingCol] = useState<number | null>(null);
+  const [editColName, setEditColName] = useState('');
 
   const dd = useDragDrop();
   const boardRef = useRef<View>(null);
@@ -128,6 +130,45 @@ export default function BoardScreen() {
       Alert.alert('Error', e instanceof Error ? e.message : 'Failed');
     }
   }
+
+  async function renameColumn(columnId: number) {
+    const name = editColName.trim();
+    if (!name) return;
+    try {
+      await api.patch(`/api/columns/${columnId}`, { name });
+      setEditingCol(null);
+      await reload();
+    } catch (e) {
+      Alert.alert('Error', e instanceof Error ? e.message : 'Failed');
+    }
+  }
+
+  function deleteColumn(columnId: number, name: string) {
+    Alert.alert(
+      `Delete "${name}"?`,
+      'All tasks in this column will be permanently deleted.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete column',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.del(`/api/columns/${columnId}`);
+              await reload();
+            } catch (e) {
+              Alert.alert('Error', e instanceof Error ? e.message : 'Failed');
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  const memberNameById = (id: number | null): string | null => {
+    if (id == null) return null;
+    return data?.members?.find((m) => m.user_id === id)?.name ?? null;
+  };
 
   const dragCard: Card | null = useMemoFindCard(data, dd.activeCardId);
 
@@ -233,8 +274,48 @@ export default function BoardScreen() {
             }}
           >
             <View style={styles.columnHeader}>
-              <Text style={styles.columnTitle}>{col.column.name}</Text>
+              {editingCol === col.column.id ? (
+                <TextInput
+                  autoFocus
+                  style={styles.colRenameInput}
+                  value={editColName}
+                  onChangeText={setEditColName}
+                  onSubmitEditing={() => renameColumn(col.column.id)}
+                  onBlur={() => renameColumn(col.column.id)}
+                  placeholder="Column name"
+                  placeholderTextColor={colors.textMuted}
+                />
+              ) : (
+                <Pressable
+                  style={{ flex: 1 }}
+                  onLongPress={() => {
+                    setEditingCol(col.column.id);
+                    setEditColName(col.column.name);
+                  }}
+                >
+                  <Text style={styles.columnTitle}>{col.column.name}</Text>
+                </Pressable>
+              )}
               <Text style={styles.count}>{col.cards.length}</Text>
+              <Pressable
+                onPress={() => {
+                  setEditingCol(col.column.id);
+                  setEditColName(col.column.name);
+                }}
+                hitSlop={8}
+                style={styles.colAction}
+              >
+                <Text style={styles.colActionText}>✎</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => deleteColumn(col.column.id, col.column.name)}
+                hitSlop={8}
+                style={styles.colAction}
+              >
+                <Text style={[styles.colActionText, { color: colors.danger }]}>
+                  ×
+                </Text>
+              </Pressable>
             </View>
             <ScrollView
               contentContainerStyle={{
@@ -256,6 +337,7 @@ export default function BoardScreen() {
                   onPress={() => router.push(`/task/${card.id}`)}
                   onMoveLeft={() => moveWithin(card.id, -1)}
                   onMoveRight={() => moveWithin(card.id, 1)}
+                  assigneeName={memberNameById(card.assignee_id)}
                   drag={dd.drag}
                   setDrag={dd.setDrag}
                   onDrop={handleDrop}
@@ -421,6 +503,27 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   columnTitle: { fontWeight: '800', color: colors.text, fontSize: 14 },
+  colRenameInput: {
+    flex: 1,
+    fontWeight: '800',
+    color: colors.text,
+    fontSize: 14,
+    backgroundColor: colors.card,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+  },
+  colAction: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  colActionText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
   count: {
     fontSize: 12,
     color: colors.textSecondary,

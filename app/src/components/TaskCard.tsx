@@ -30,6 +30,7 @@ interface Props {
   onMoveRight?: () => void;
   isFirst?: boolean;
   isLast?: boolean;
+  assigneeName?: string | null;
   /** Absolute layout of the card in window coords (measured once). */
   onLayoutInWindow?: (layout: {
     x: number;
@@ -53,6 +54,7 @@ export function TaskCard({
   onMoveRight,
   isFirst,
   isLast,
+  assigneeName,
   onLayoutInWindow,
   drag,
   setDrag,
@@ -155,6 +157,13 @@ export function TaskCard({
               </View>
               {card.due_date ? (
                 <Text style={styles.due}>Due {card.due_date}</Text>
+              ) : null}
+              {assigneeName ? (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {assigneeName.slice(0, 1).toUpperCase()}
+                  </Text>
+                </View>
               ) : null}
             </View>
             <View style={styles.actions}>
@@ -274,6 +283,16 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
   due: { fontSize: 11, color: colors.textMuted },
+  avatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto',
+  },
+  avatarText: { fontSize: 10, fontWeight: '800', color: colors.primary },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
