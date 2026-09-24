@@ -8,9 +8,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { api } from '../../api/client';
-import type { Card } from '../../api/types';
-import { colors, radius, spacing } from '../../theme';
+import { api } from '../../../api/client';
+import type { Card } from '../../../api/types';
+import { colors, radius, spacing } from '../../../theme';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 

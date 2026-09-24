@@ -14,9 +14,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { api, API_URL, getToken } from '../api/client';
-import type { Attachment, Card, Comment, Subtask } from '../api/types';
-import { colors, radius, spacing } from '../theme';
+import { api, API_URL, getToken } from '../../api/client';
+import type { Attachment, Card, Comment, Subtask } from '../../api/types';
+import { colors, radius, spacing } from '../../theme';
 
 export default function TaskScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -268,11 +268,11 @@ export default function TaskScreen() {
             style={styles.subtaskRow}
             onPress={() => toggleSubtask(s)}
           >
-            <View style={[styles.checkbox, s.done && styles.checkboxDone]}>
+            <View style={[styles.checkbox, !!s.done && styles.checkboxDone]}>
               {s.done ? <Text style={styles.check}>✓</Text> : null}
             </View>
             <Text
-              style={[styles.subtaskText, s.done && styles.subtaskDone]}
+              style={[styles.subtaskText, !!s.done && styles.subtaskDone]}
             >
               {s.title}
             </Text>

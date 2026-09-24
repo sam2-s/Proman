@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -36,9 +36,9 @@ export default function Projects() {
     }
   }, []);
 
-  useState(() => {
+  useEffect(() => {
     load();
-  });
+  }, [load]);
 
   async function createProject() {
     if (!name.trim()) return;

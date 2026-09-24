@@ -12,11 +12,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { api } from '../api/client';
-import { useAuth } from '../context/auth';
-import { useBoard } from '../hooks/useBoard';
-import { useProjectSocket } from '../hooks/useProjectSocket';
-import { colors, radius, spacing } from '../theme';
+import { api } from '../../api/client';
+import { useAuth } from '../../context/auth';
+import { useBoard } from '../../hooks/useBoard';
+import { useProjectSocket } from '../../hooks/useProjectSocket';
+import { colors, radius, spacing } from '../../theme';
 import { TaskCard } from '../../components/TaskCard';
 
 export default function BoardScreen() {
@@ -172,7 +172,6 @@ export default function BoardScreen() {
               <Text style={styles.count}>{col.cards.length}</Text>
             </View>
             <ScrollView
-              vertical
               contentContainerStyle={{
                 gap: spacing.sm,
                 paddingBottom: spacing.md,
