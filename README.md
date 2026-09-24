@@ -1,5 +1,10 @@
 # Proman
 
+[![CI](https://github.com/sam2-s/Proman/actions/workflows/ci.yml/badge.svg)](https://github.com/sam2-s/Proman/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-Axum-orange.svg)](https://www.axum.rs)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2057-blue.svg)](https://expo.dev)
+
 **Proman** is a cross-platform project management tool — Kanban boards, timelines, calendars, and team collaboration that runs on **web**, **iOS**, and **Android** from a single codebase.
 
 ## Stack
@@ -32,7 +37,7 @@ Proman/
 └── app/        # Expo app (web + iOS + Android)
 ```
 
-## Getting started
+## Quick start
 
 ### Prerequisites
 
@@ -49,6 +54,13 @@ cargo run
 
 API listens on `http://localhost:3000`. SQLite database is created automatically at `server/proman.db`.
 
+Optional — seed a demo account:
+
+```bash
+./scripts/seed.sh
+# login: demo@proman.dev / password123
+```
+
 ### 2. Frontend
 
 ```bash
@@ -60,6 +72,20 @@ npx expo start
 - Press `w` → open in the browser (web)
 - Scan the QR code with **Expo Go** → run on your phone
 - Press `a` → Android emulator (requires Android SDK)
+
+### 3. Smoke test
+
+```bash
+./scripts/smoke.sh
+```
+
+Or use the Makefile:
+
+```bash
+make server   # API
+make web      # Expo web
+make check    # cargo check + tsc
+```
 
 ## API overview
 
