@@ -3,6 +3,8 @@ name = "proman-server"
 version = "0.1.0"
 edition = "2021"
 description = "Proman API — lightweight Rust project management backend"
+license = "MIT"
+repository = "https://github.com/sam2-s/Proman"
 
 [dependencies]
 axum = { version = "0.8", features = ["multipart", "ws"] }
