@@ -50,6 +50,23 @@ fn validate_priority(p: &str) -> ApiResult<()> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_valid_priorities() {
+        for p in PRIORITIES {
+            assert!(validate_priority(p).is_ok());
+        }
+    }
+
+    #[test]
+    fn rejects_unknown_priority() {
+        assert!(validate_priority("critical").is_err());
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CreateCard {
     pub title: String,

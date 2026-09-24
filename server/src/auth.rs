@@ -88,3 +88,27 @@ impl FromRequestParts<crate::state::SharedState> for AuthUser {
         Ok(AuthUser(claims.sub))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn password_roundtrip() {
+        let hash = hash_password("s3cret-pass").expect("hash");
+        assert!(verify_password("s3cret-pass", &hash));
+        assert!(!verify_password("wrong", &hash));
+    }
+
+    #[test]
+    fn jwt_roundtrip() {
+        let token = issue_token(42).expect("token");
+        let claims = parse_token(&token).expect("parse");
+        assert_eq!(claims.sub, 42);
+    }
+
+    #[test]
+    fn jwt_rejects_garbage() {
+        assert!(parse_token("not.a.token").is_err());
+    }
+}
