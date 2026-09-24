@@ -7,9 +7,16 @@
   "scripts": {
     "dev:app": "npm run start --workspace=app",
     "dev:web": "npm run web --workspace=app",
-    "typecheck": "npm run typecheck --workspace=app"
+    "typecheck": "npm run typecheck --workspace=app",
+    "check": "cd server && cargo check && cd ../app && npx tsc --noEmit"
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sam2-s/Proman.git"
+  },
+  "license": "MIT",
+  "author": "Sammy (sam2-s)"
 }
