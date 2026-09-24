@@ -77,6 +77,7 @@ fn event_project_id(ev: &WsEvent) -> i64 {
         | WsEvent::CardDeleted { project_id, .. }
         | WsEvent::ColumnCreated { project_id, .. }
         | WsEvent::ColumnUpdated { project_id, .. }
+        | WsEvent::ColumnDeleted { project_id, .. }
         | WsEvent::CommentCreated { project_id, .. }
         | WsEvent::SubtaskUpdated { project_id, .. } => *project_id,
     }

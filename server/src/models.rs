@@ -117,6 +117,10 @@ pub enum WsEvent {
         project_id: i64,
         column: Column,
     },
+    ColumnDeleted {
+        project_id: i64,
+        column_id: i64,
+    },
     CommentCreated {
         project_id: i64,
         card_id: i64,
