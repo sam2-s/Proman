@@ -8,8 +8,8 @@ server/target/
 *.db-wal
 *.db-shm
 
-# Uploads
-uploads/
+# Uploads (keep the folder, ignore the files)
+uploads/*
 !uploads/.gitkeep
 
 # Node / Expo
