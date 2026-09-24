@@ -85,6 +85,11 @@ export function useBoard(boardId: number) {
           next.columns.sort((a, b) => a.column.position - b.column.position);
           break;
         }
+        case 'column_deleted': {
+          const colId = event.column_id as number;
+          next.columns = next.columns.filter((c) => c.column.id !== colId);
+          break;
+        }
         case 'comment_created':
         case 'subtask_updated':
           // Detail screens refetch; board only needs structural events.

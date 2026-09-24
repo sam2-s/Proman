@@ -88,9 +88,17 @@ export interface Attachment {
   created_at: string;
 }
 
+export interface BoardMember {
+  user_id: number;
+  name: string;
+  email: string;
+  role: Role;
+}
+
 export interface BoardDetail {
   board: Board;
   columns: { column: Column; cards: Card[] }[];
+  members?: BoardMember[];
 }
 
 export interface ProjectDetail {
