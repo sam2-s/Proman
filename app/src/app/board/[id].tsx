@@ -17,10 +17,13 @@ import { useAuth } from '../../context/auth';
 import { useBoard } from '../../hooks/useBoard';
 import { useDragDrop } from '../../hooks/useDragDrop';
 import { useProjectSocket } from '../../hooks/useProjectSocket';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing } from '../../theme';
+import { useTheme } from '../../theme/Theme';
 import { DragGhost, TaskCard } from '../../components/TaskCard';
 
 export default function BoardScreen() {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const boardId = Number(id);
   const { user } = useAuth();
@@ -224,6 +227,14 @@ export default function BoardScreen() {
           </Pressable>
           <Pressable
             style={styles.toolBtn}
+            onPress={() =>
+              router.push(`/project/${projectId}/activity`)
+            }
+          >
+            <Text style={styles.toolBtnText}>Activity</Text>
+          </Pressable>
+          <Pressable
+            style={styles.toolBtn}
             onPress={() => router.push(`/project/${projectId}/members`)}
           >
             <Text style={styles.toolBtnText}>Team</Text>
@@ -423,7 +434,8 @@ function useMemoFindCard(
   return null;
 }
 
-const styles = StyleSheet.create({
+function makeStyles(colors: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: {
     flex: 1,
@@ -604,3 +616,4 @@ const styles = StyleSheet.create({
   },
   btnPrimaryText: { color: '#fff', fontWeight: '700' },
 });
+}

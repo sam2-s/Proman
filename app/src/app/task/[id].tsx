@@ -25,9 +25,12 @@ import type {
   Comment,
   Subtask,
 } from '../../api/types';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing } from '../../theme';
+import { useTheme } from '../../theme/Theme';
 
 export default function TaskScreen() {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const cardId = Number(id);
 
@@ -427,7 +430,8 @@ export default function TaskScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(colors: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: {
     flex: 1,
@@ -599,3 +603,4 @@ const styles = StyleSheet.create({
   commentBody: { fontSize: 14, color: colors.text, marginTop: 4 },
   commentTime: { fontSize: 11, color: colors.textMuted, marginTop: 6 },
 });
+}

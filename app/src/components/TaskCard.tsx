@@ -8,7 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Card } from '../api/types';
-import { colors, radius, shadow, spacing } from '../theme';
+import { radius, shadow, spacing } from '../theme';
+import { useTheme } from '../theme/Theme';
 
 const HIDDEN_CARD_HEIGHT = 140;
 
@@ -61,6 +62,8 @@ export function TaskCard({
   onDrop,
   isDragging,
 }: Props) {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const priorityColor =
     colors.priority[card.priority as keyof typeof colors.priority] ??
     colors.priority.medium;
@@ -199,6 +202,8 @@ export function DragGhost({
   card: Card;
   drag: DragState;
 }) {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const priorityColor =
     colors.priority[card.priority as keyof typeof colors.priority] ??
     colors.priority.medium;
@@ -235,7 +240,8 @@ export function DragGhost({
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(colors: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.md,
@@ -319,3 +325,4 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
 });
+}

@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { api } from '../../../api/client';
 import type { Card } from '../../../api/types';
-import { colors, radius, spacing } from '../../../theme';
+import { radius, spacing } from '../../../theme';
+import { useTheme } from '../../../theme/Theme';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -23,6 +24,8 @@ function iso(d: Date) {
 }
 
 export default function CalendarScreen() {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
   const [cards, setCards] = useState<Card[] | null>(null);
@@ -187,7 +190,8 @@ export default function CalendarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(colors: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: {
     flex: 1,
@@ -262,3 +266,4 @@ const styles = StyleSheet.create({
   agendaTask: { fontWeight: '700', color: colors.text, fontSize: 14 },
   agendaDesc: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
 });
+}

@@ -12,9 +12,12 @@ import {
 } from 'react-native';
 import { api } from '../../../api/client';
 import type { Member, ProjectDetail } from '../../../api/types';
-import { colors, radius, spacing } from '../../../theme';
+import { radius, spacing } from '../../../theme';
+import { useTheme } from '../../../theme/Theme';
 
 export default function MembersScreen() {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
@@ -102,6 +105,8 @@ export default function MembersScreen() {
 }
 
 function MemberRow({ member }: { member: Member }) {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const initial = member.name.slice(0, 1).toUpperCase();
   return (
     <View style={styles.row}>
@@ -131,7 +136,8 @@ function MemberRow({ member }: { member: Member }) {
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(colors: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: {
     flex: 1,
@@ -204,3 +210,4 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 });
+}

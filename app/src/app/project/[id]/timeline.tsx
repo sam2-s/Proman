@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { api } from '../../../api/client';
 import type { Card } from '../../../api/types';
-import { colors, radius, spacing } from '../../../theme';
+import { radius, spacing } from '../../../theme';
+import { useTheme } from '../../../theme/Theme';
 
 function parseDate(s: string | null): Date | null {
   if (!s) return null;
@@ -22,6 +23,8 @@ function dayDiff(a: Date, b: Date) {
 }
 
 export default function TimelineScreen() {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
   const [cards, setCards] = useState<Card[] | null>(null);
@@ -164,7 +167,8 @@ export default function TimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(colors: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: {
     flex: 1,
@@ -234,3 +238,4 @@ const styles = StyleSheet.create({
   empty: { fontWeight: '700', color: colors.text },
   emptyHint: { color: colors.textSecondary, marginTop: 4, fontSize: 13 },
 });
+}
