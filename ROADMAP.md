@@ -1,26 +1,28 @@
 # Roadmap
 
-## v0.1 — Foundation
+## v0.1 — Foundation ✅
 - [x] Project scaffold, README, license
-- [ ] Rust API skeleton (Axum)
-- [ ] SQLite schema + migrations
-- [ ] JWT register / login
+- [x] Rust API skeleton (Axum)
+- [x] SQLite schema + migrations
+- [x] JWT register / login
 
-## v0.2 — Core PM
-- [ ] Projects + members
-- [ ] Boards, columns, cards
-- [ ] Drag-and-drop Kanban
-- [ ] Task detail (subtasks, comments)
+## v0.2 — Core PM ✅
+- [x] Projects + members
+- [x] Boards, columns, cards
+- [x] Kanban board with move controls
+- [x] Task detail (subtasks, comments)
 
-## v0.3 — Views
-- [ ] Timeline / Gantt
-- [ ] Calendar
-- [ ] File attachments
+## v0.3 — Views ✅
+- [x] Timeline / Gantt
+- [x] Calendar
+- [x] File attachments
 
-## v0.4 — Realtime & polish
-- [ ] WebSocket live sync
-- [ ] Responsive mobile layouts
-- [ ] Android / iOS build configs
+## v0.4 — Realtime & polish ✅
+- [x] WebSocket live sync
+- [x] Responsive layouts
+- [x] CI workflow (cargo + tsc)
+- [ ] Touch drag-and-drop gestures
+- [ ] Android / iOS EAS build configs
 
 ## Later
 - [ ] Notifications
@@ -28,3 +30,5 @@
 - [ ] Dark mode
 - [ ] Offline support
 - [ ] EAS builds for App Store / Play Store
+- [ ] Document picker on mobile (expo-document-picker)
+- [ ] Assignee avatars on cards
