@@ -1,9 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Modal,
   Pressable,
   ScrollView,
@@ -13,11 +12,13 @@ import {
   View,
 } from 'react-native';
 import { api } from '../../api/client';
+import type { Card } from '../../api/types';
 import { useAuth } from '../../context/auth';
 import { useBoard } from '../../hooks/useBoard';
+import { useDragDrop } from '../../hooks/useDragDrop';
 import { useProjectSocket } from '../../hooks/useProjectSocket';
 import { colors, radius, spacing } from '../../theme';
-import { TaskCard } from '../../components/TaskCard';
+import { DragGhost, TaskCard } from '../../components/TaskCard';
 
 export default function BoardScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,21 +31,60 @@ export default function BoardScreen() {
   const [quickAddCol, setQuickAddCol] = useState<number | null>(null);
   const [quickTitle, setQuickTitle] = useState('');
 
+  const dd = useDragDrop();
+  const boardRef = useRef<View>(null);
+
   const projectId = data?.board.project_id ?? null;
   const { connected } = useProjectSocket(projectId, applyEvent);
+
+  // Keep board-level absolute origin for drop math on native.
+  useEffect(() => {
+    // no-op placeholder for future measure; layouts registered per column
+  }, []);
+
+  const handleDrop = useCallback(
+    (cardId: number, absX: number, absY: number) => {
+      if (!data) return;
+      const targetColId = dd.hitColumn(absX, absY);
+      if (targetColId == null) return;
+
+      let fromColIdx = -1;
+      let cardPos = -1;
+      let card: Card | null = null;
+      data.columns.forEach((c, i) => {
+        const idx = c.cards.findIndex((x) => x.id === cardId);
+        if (idx >= 0) {
+          fromColIdx = i;
+          cardPos = idx;
+          card = c.cards[idx];
+        }
+      });
+      if (!card) return;
+
+      const targetCol = data.columns.find((c) => c.column.id === targetColId);
+      if (!targetCol) return;
+
+      const sameCol = targetColId === data.columns[fromColIdx]?.column.id;
+      const rawIndex = dd.hitIndex(targetColId, absY, targetCol.cards.length);
+      let toPos = rawIndex;
+      if (sameCol && toPos > cardPos) toPos = Math.max(cardPos, toPos - 1);
+
+      if (sameCol && toPos === cardPos) return;
+      void moveCard(card, targetColId, toPos);
+    },
+    [data, dd, moveCard],
+  );
 
   const moveWithin = useCallback(
     async (cardId: number, direction: -1 | 1) => {
       if (!data) return;
       const cols = data.columns;
       let fromIdx = -1;
-      let colIdx = -1;
       let cardPos = -1;
       cols.forEach((c, i) => {
         const idx = c.cards.findIndex((x) => x.id === cardId);
         if (idx >= 0) {
           fromIdx = i;
-          colIdx = i;
           cardPos = idx;
         }
       });
@@ -56,7 +96,6 @@ export default function BoardScreen() {
         const target = cols[targetCol];
         await moveCard(card, target.column.id, target.cards.length);
       } else {
-        // Reorder within same column
         const newPos = cardPos + direction;
         if (newPos < 0 || newPos >= cols[fromIdx].cards.length) return;
         await moveCard(card, cols[fromIdx].column.id, newPos);
@@ -90,6 +129,8 @@ export default function BoardScreen() {
     }
   }
 
+  const dragCard: Card | null = useMemoFindCard(data, dd.activeCardId);
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -110,7 +151,7 @@ export default function BoardScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} ref={boardRef}>
       <View style={styles.toolbar}>
         <View>
           <Text style={styles.boardName}>{data.board.name}</Text>
@@ -123,31 +164,26 @@ export default function BoardScreen() {
             />
             <Text style={styles.status}>
               {connected ? 'Live' : 'Offline'} · {user?.name}
+              {dd.activeCardId ? ' · dragging' : ''}
             </Text>
           </View>
         </View>
         <View style={styles.toolbarActions}>
           <Pressable
             style={styles.toolBtn}
-            onPress={() =>
-              router.push(`/project/${projectId}/timeline`)
-            }
+            onPress={() => router.push(`/project/${projectId}/timeline`)}
           >
             <Text style={styles.toolBtnText}>Timeline</Text>
           </Pressable>
           <Pressable
             style={styles.toolBtn}
-            onPress={() =>
-              router.push(`/project/${projectId}/calendar`)
-            }
+            onPress={() => router.push(`/project/${projectId}/calendar`)}
           >
             <Text style={styles.toolBtnText}>Calendar</Text>
           </Pressable>
           <Pressable
             style={styles.toolBtn}
-            onPress={() =>
-              router.push(`/project/${projectId}/members`)
-            }
+            onPress={() => router.push(`/project/${projectId}/members`)}
           >
             <Text style={styles.toolBtnText}>Team</Text>
           </Pressable>
@@ -164,9 +200,38 @@ export default function BoardScreen() {
         horizontal
         contentContainerStyle={styles.columnsRow}
         showsHorizontalScrollIndicator={false}
+        scrollEnabled={dd.activeCardId === null}
       >
         {data.columns.map((col, colIdx) => (
-          <View key={col.column.id} style={styles.column}>
+          <View
+            key={col.column.id}
+            style={[
+              styles.column,
+              dd.activeCardId !== null && styles.columnDropTarget,
+            ]}
+            onLayout={(e) => {
+              const { x, y, width, height } = e.nativeEvent.layout;
+              const node = e.target as unknown as {
+                measureInWindow?: (
+                  cb: (x: number, y: number, w: number, h: number) => void,
+                ) => void;
+              };
+              if (typeof node?.measureInWindow === 'function') {
+                node.measureInWindow((wx, wy, ww, wh) => {
+                  dd.registerColumnWindow(col.column.id, wx, wy, ww, wh);
+                });
+              } else {
+                // Web fallback: layout coords relative to scroll container
+                dd.registerColumn(col.column.id, {
+                  id: col.column.id,
+                  left: x,
+                  right: x + width,
+                  top: y,
+                  bottom: y + height,
+                });
+              }
+            }}
+          >
             <View style={styles.columnHeader}>
               <Text style={styles.columnTitle}>{col.column.name}</Text>
               <Text style={styles.count}>{col.cards.length}</Text>
@@ -177,6 +242,7 @@ export default function BoardScreen() {
                 paddingBottom: spacing.md,
               }}
               style={{ maxHeight: 560 }}
+              scrollEnabled={dd.activeCardId === null}
             >
               {col.cards.map((card, cardIdx) => (
                 <TaskCard
@@ -190,6 +256,10 @@ export default function BoardScreen() {
                   onPress={() => router.push(`/task/${card.id}`)}
                   onMoveLeft={() => moveWithin(card.id, -1)}
                   onMoveRight={() => moveWithin(card.id, 1)}
+                  drag={dd.drag}
+                  setDrag={dd.setDrag}
+                  onDrop={handleDrop}
+                  isDragging={dd.isDragging(card.id)}
                 />
               ))}
             </ScrollView>
@@ -226,6 +296,8 @@ export default function BoardScreen() {
         </View>
       </ScrollView>
 
+      {dragCard ? <DragGhost card={dragCard} drag={dd.drag} /> : null}
+
       <Modal visible={addColumnOpen} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
@@ -257,6 +329,18 @@ export default function BoardScreen() {
   );
 }
 
+function useMemoFindCard(
+  data: { columns: { cards: Card[] }[] } | null,
+  cardId: number | null,
+): Card | null {
+  if (!data || cardId == null) return null;
+  for (const col of data.columns) {
+    const c = col.cards.find((x) => x.id === cardId);
+    if (c) return c;
+  }
+  return null;
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: {
@@ -266,7 +350,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
     gap: spacing.md,
   },
-  errorText: { color: colors.textSecondary, paddingHorizontal: spacing.lg, textAlign: 'center' },
+  errorText: {
+    color: colors.textSecondary,
+    paddingHorizontal: spacing.lg,
+    textAlign: 'center',
+  },
   retryBtn: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
@@ -286,7 +374,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   boardName: { fontSize: 20, fontWeight: '800', color: colors.text },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
   dot: { width: 8, height: 8, borderRadius: 4 },
   status: { fontSize: 12, color: colors.textSecondary },
   toolbarActions: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
@@ -298,15 +391,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  toolBtnPrimary: { backgroundColor: colors.primary, borderColor: colors.primary },
+  toolBtnPrimary: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   toolBtnText: { fontSize: 12, fontWeight: '700', color: colors.text },
-  columnsRow: { padding: spacing.md, gap: spacing.md, alignItems: 'flex-start' },
+  columnsRow: {
+    padding: spacing.md,
+    gap: spacing.md,
+    alignItems: 'flex-start',
+    minHeight: 640,
+  },
   column: {
     width: 270,
     backgroundColor: '#EEF2F7',
     borderRadius: radius.lg,
     padding: spacing.sm,
     minHeight: 200,
+  },
+  columnDropTarget: {
+    borderWidth: 1,
+    borderColor: colors.primary + '44',
   },
   columnHeader: {
     flexDirection: 'row',
@@ -326,7 +431,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   addCard: { padding: spacing.sm, alignItems: 'center' },
-  addCardText: { color: colors.textSecondary, fontWeight: '600', fontSize: 13 },
+  addCardText: {
+    color: colors.textSecondary,
+    fontWeight: '600',
+    fontSize: 13,
+  },
   quickAdd: { padding: spacing.xs },
   quickInput: {
     backgroundColor: colors.card,
