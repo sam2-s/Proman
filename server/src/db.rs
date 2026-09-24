@@ -6,7 +6,9 @@ pub async fn init() -> anyhow::Result<SqlitePool> {
     let url =
         std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:proman.db?mode=rwc".to_string());
 
-    let opts = SqliteConnectOptions::from_str(&url)?.create_if_missing(true);
+    let opts = SqliteConnectOptions::from_str(&url)?
+        .create_if_missing(true)
+        .foreign_keys(true);
 
     let pool = SqlitePoolOptions::new()
         .max_connections(8)
