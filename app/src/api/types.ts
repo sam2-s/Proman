@@ -1,0 +1,100 @@
+export type Role = 'owner' | 'editor' | 'viewer';
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  created_at?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export interface Project {
+  id: number;
+  name: string;
+  description: string;
+  owner_id: number;
+  created_at: string;
+  role?: Role;
+}
+
+export interface Member {
+  project_id: number;
+  user_id: number;
+  role: Role;
+  name: string;
+  email: string;
+}
+
+export interface Board {
+  id: number;
+  project_id: number;
+  name: string;
+  created_at: string;
+}
+
+export interface Column {
+  id: number;
+  board_id: number;
+  name: string;
+  position: number;
+}
+
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface Card {
+  id: number;
+  column_id: number;
+  title: string;
+  description: string;
+  priority: Priority;
+  position: number;
+  due_date: string | null;
+  start_date: string | null;
+  assignee_id: number | null;
+  created_by: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Subtask {
+  id: number;
+  card_id: number;
+  title: string;
+  done: number;
+  position: number;
+}
+
+export interface Comment {
+  id: number;
+  card_id: number;
+  user_id: number;
+  body: string;
+  created_at: string;
+  author_name: string;
+}
+
+export interface Attachment {
+  id: number;
+  card_id: number;
+  filename: string;
+  stored_name: string;
+  mime: string;
+  size: number;
+  uploaded_by: number | null;
+  created_at: string;
+}
+
+export interface BoardDetail {
+  board: Board;
+  columns: { column: Column; cards: Card[] }[];
+}
+
+export interface ProjectDetail {
+  project: Project;
+  members: Member[];
+  boards: Board[];
+}
