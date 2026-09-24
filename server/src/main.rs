@@ -9,6 +9,7 @@ use tracing_subscriber::EnvFilter;
 mod auth;
 mod db;
 mod error;
+mod feed_helpers;
 mod models;
 mod routes;
 mod state;

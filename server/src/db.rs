@@ -106,6 +106,28 @@ async fn run_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
         CREATE INDEX IF NOT EXISTS idx_subtasks_card ON subtasks(card_id);
         CREATE INDEX IF NOT EXISTS idx_comments_card ON comments(card_id);
         CREATE INDEX IF NOT EXISTS idx_members_user ON project_members(user_id);
+
+        CREATE TABLE IF NOT EXISTS activity (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            card_id INTEGER REFERENCES cards(id) ON DELETE SET NULL,
+            verb TEXT NOT NULL,
+            summary TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_activity_project ON activity(project_id, created_at);
+
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            card_id INTEGER REFERENCES cards(id) ON DELETE CASCADE,
+            body TEXT NOT NULL,
+            read INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read, created_at);
         "#,
     )
     .execute(pool)

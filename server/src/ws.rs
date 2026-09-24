@@ -79,6 +79,7 @@ fn event_project_id(ev: &WsEvent) -> i64 {
         | WsEvent::ColumnUpdated { project_id, .. }
         | WsEvent::ColumnDeleted { project_id, .. }
         | WsEvent::CommentCreated { project_id, .. }
-        | WsEvent::SubtaskUpdated { project_id, .. } => *project_id,
+        | WsEvent::SubtaskUpdated { project_id, .. }
+        | WsEvent::NotificationCreated { project_id, .. } => *project_id,
     }
 }

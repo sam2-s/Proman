@@ -130,6 +130,32 @@ pub enum WsEvent {
         project_id: i64,
         card_id: i64,
     },
+    NotificationCreated {
+        project_id: i64,
+        notification: Notification,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct Activity {
+    pub id: i64,
+    pub project_id: i64,
+    pub user_id: Option<i64>,
+    pub card_id: Option<i64>,
+    pub verb: String,
+    pub summary: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct Notification {
+    pub id: i64,
+    pub user_id: i64,
+    pub project_id: i64,
+    pub card_id: Option<i64>,
+    pub body: String,
+    pub read: i64,
+    pub created_at: String,
 }
 
 #[derive(Debug, Deserialize)]
