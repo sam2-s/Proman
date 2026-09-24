@@ -1,4 +1,4 @@
-.PHONY: help server app web typecheck check fmt clean
+.PHONY: help server app web typecheck check fmt clean apk prebuild test smoke
 
 help:
 	@echo "Proman make targets:"
@@ -7,7 +7,11 @@ help:
 	@echo "  make web        - start Expo for web"
 	@echo "  make typecheck  - TypeScript check"
 	@echo "  make check      - cargo check + tsc"
+	@echo "  make test       - cargo test"
 	@echo "  make fmt        - cargo fmt"
+	@echo "  make smoke      - API smoke tests (server must be running)"
+	@echo "  make prebuild   - generate native android/ios projects"
+	@echo "  make apk        - local Android debug APK via Gradle"
 	@echo "  make clean      - remove build artifacts"
 
 server:
@@ -26,9 +30,22 @@ check:
 	cd server && cargo check
 	cd app && npx tsc --noEmit
 
+test:
+	cd server && cargo test
+
 fmt:
 	cd server && cargo fmt
 
+smoke:
+	bash scripts/smoke.sh
+
+prebuild:
+	cd app && npx expo prebuild --platform android --clean
+
+apk: prebuild
+	cd app/android && ./gradlew assembleDebug
+	@echo "APK: app/android/app/build/outputs/apk/debug/app-debug.apk"
+
 clean:
 	cd server && cargo clean
-	rm -rf app/dist app/.expo
+	rm -rf app/dist app/.expo app/android app/ios

@@ -25,9 +25,13 @@
 - **Timeline / Gantt** — schedule view with task bars over time
 - **Calendar view** — tasks and deadlines on a monthly calendar
 - **Team collaboration** — projects, members, roles, comments
-- **File attachments** — upload and download files on tasks
+- **File attachments** — upload and download files on tasks (incl. mobile document picker)
 - **Live updates** — board changes sync in real time over WebSockets
+- **Search** — find tasks across your projects
+- **Activity & notifications** — project feed + in-app bell
+- **Dark mode** — follows system appearance
 - **Cross-platform** — one app runs in the browser and on phones
+- **Android APK** — EAS preview profile builds an installable APK
 
 ## Project layout
 
@@ -110,7 +114,20 @@ make check    # cargo check + tsc
 | POST   | `/api/cards/:id/comments`     | Add a comment            |
 | POST   | `/api/cards/:id/attachments`  | Upload a file            |
 | GET    | `/api/attachments/:id`        | Download a file          |
+| GET    | `/api/search?q=`              | Search cards             |
+| GET    | `/api/projects/:id/activity`  | Project activity feed    |
+| GET    | `/api/notifications`          | My notifications         |
 | WS     | `/ws?project_id=`             | Realtime board events    |
+
+## Android APK
+
+```bash
+# cloud (APK via EAS preview profile)
+cd app && npx eas-cli build --platform android --profile preview
+
+# or local Gradle
+make apk
+```
 
 ## License
 

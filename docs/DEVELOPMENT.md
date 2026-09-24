@@ -43,10 +43,32 @@ npx expo start
 
 ```bash
 make check      # cargo check + tsc
+make test       # cargo unit tests
 make fmt        # rustfmt
 make server     # cargo run
 make web        # expo start --web
+make smoke      # end-to-end API smoke test
 ```
+
+## Android APK
+
+EAS cloud (APK for preview):
+
+```bash
+cd app
+npx eas-cli build --platform android --profile preview
+```
+
+Local Gradle (requires Android SDK + JDK 17+):
+
+```bash
+make prebuild   # expo prebuild --platform android --clean
+make apk        # ./gradlew assembleDebug
+# → app/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+`app/eas.json` sets `preview.android.buildType = "apk"` so cloud preview builds
+emit an installable APK rather than an AAB.
 
 ## Testing the stack
 
