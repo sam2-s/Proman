@@ -121,6 +121,15 @@ pub async fn create(
         project_id,
         card: card.clone(),
     });
+    crate::feed_helpers::log_activity(
+        &state.db,
+        project_id,
+        Some(user_id),
+        Some(card.id),
+        "card_created",
+        &format!("Created task \"{}\"", card.title),
+    )
+    .await;
     Ok((StatusCode::CREATED, Json(card)))
 }
 
@@ -252,6 +261,27 @@ pub async fn update(
         project_id,
         card: card.clone(),
     });
+    if let Some(Some(assignee)) = req.assignee_id {
+        if assignee != user_id {
+            crate::feed_helpers::notify_user(
+                &state,
+                assignee,
+                project_id,
+                Some(id),
+                &format!("You were assigned to \"{}\"", card.title),
+            )
+            .await;
+        }
+    }
+    crate::feed_helpers::log_activity(
+        &state.db,
+        project_id,
+        Some(user_id),
+        Some(id),
+        "card_updated",
+        &format!("Updated task \"{}\"", card.title),
+    )
+    .await;
     Ok(Json(card))
 }
 
@@ -270,6 +300,15 @@ pub async fn remove(
         project_id,
         card_id: id,
     });
+    crate::feed_helpers::log_activity(
+        &state.db,
+        project_id,
+        Some(user_id),
+        Some(id),
+        "card_deleted",
+        "Deleted a task",
+    )
+    .await;
     Ok(StatusCode::NO_CONTENT)
 }
 

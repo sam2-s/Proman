@@ -91,5 +91,31 @@ pub async fn create(
         card_id,
         comment: comment.clone(),
     });
+    let title_row = sqlx::query("SELECT title FROM cards WHERE id = ?")
+        .bind(card_id)
+        .fetch_optional(&state.db)
+        .await;
+    let title = title_row
+        .ok()
+        .flatten()
+        .map(|r| r.get::<String, _>("title"))
+        .unwrap_or_else(|| "a task".into());
+    crate::feed_helpers::log_activity(
+        &state.db,
+        project_id,
+        Some(user_id),
+        Some(card_id),
+        "comment_created",
+        &format!("Commented on \"{}\"", title),
+    )
+    .await;
+    crate::feed_helpers::notify_members(
+        &state,
+        project_id,
+        Some(user_id),
+        Some(card_id),
+        &format!("New comment on \"{}\": {}", title, body),
+    )
+    .await;
     Ok((StatusCode::CREATED, Json(comment)))
 }
