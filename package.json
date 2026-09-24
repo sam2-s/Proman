@@ -1,0 +1,15 @@
+{
+  "name": "proman",
+  "private": true,
+  "workspaces": [
+    "app"
+  ],
+  "scripts": {
+    "dev:app": "npm run start --workspace=app",
+    "dev:web": "npm run web --workspace=app",
+    "typecheck": "npm run typecheck --workspace=app"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
