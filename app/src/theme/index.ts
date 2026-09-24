@@ -1,4 +1,28 @@
-export const colors = {
+export interface PriorityPalette {
+  low: string;
+  medium: string;
+  high: string;
+  urgent: string;
+}
+
+export interface Palette {
+  primary: string;
+  primaryDark: string;
+  primaryLight: string;
+  bg: string;
+  card: string;
+  border: string;
+  text: string;
+  textSecondary: string;
+  textMuted: string;
+  danger: string;
+  success: string;
+  warning: string;
+  info: string;
+  priority: PriorityPalette;
+}
+
+export const colors: Palette = {
   primary: '#4F46E5',
   primaryDark: '#4338CA',
   primaryLight: '#EEF2FF',
@@ -18,7 +42,35 @@ export const colors = {
     high: '#F59E0B',
     urgent: '#EF4444',
   },
-} as const;
+};
+
+export const darkColors: Palette = {
+  primary: '#818CF8',
+  primaryDark: '#6366F1',
+  primaryLight: '#1E1B4B',
+  bg: '#0F172A',
+  card: '#1E293B',
+  border: '#334155',
+  text: '#F1F5F9',
+  textSecondary: '#94A3B8',
+  textMuted: '#64748B',
+  danger: '#F87171',
+  success: '#4ADE80',
+  warning: '#FBBF24',
+  info: '#60A5FA',
+  priority: {
+    low: '#94A3B8',
+    medium: '#60A5FA',
+    high: '#FBBF24',
+    urgent: '#F87171',
+  },
+};
+
+export function paletteFor(
+  scheme: 'light' | 'dark' | null | undefined,
+): Palette {
+  return scheme === 'dark' ? darkColors : colors;
+}
 
 export const spacing = {
   xs: 4,
