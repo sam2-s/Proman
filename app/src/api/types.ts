@@ -111,3 +111,36 @@ export interface ProjectDetail {
   members: Member[];
   boards: Board[];
 }
+
+export interface ActivityItem {
+  id: number;
+  project_id: number;
+  user_id: number | null;
+  card_id: number | null;
+  verb: string;
+  summary: string;
+  created_at: string;
+}
+
+export interface NotificationItem {
+  id: number;
+  user_id: number;
+  project_id: number;
+  card_id: number | null;
+  body: string;
+  read: number;
+  created_at: string;
+}
+
+export interface SearchResult {
+  id: number;
+  title: string;
+  priority: Priority;
+  due_date: string | null;
+  column_id: number;
+  column_name: string;
+  board_id: number;
+  board_name: string;
+  project_id: number;
+  project_name: string;
+}
