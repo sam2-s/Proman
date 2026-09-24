@@ -11,14 +11,75 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '../context/auth';
-import { colors, radius, spacing } from '../theme';
+import { useTheme } from '../theme/Theme';
+import { radius, spacing } from '../theme';
 
 export default function Register() {
+  const colors = useTheme();
   const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      width: '100%',
+      maxWidth: 420,
+      alignSelf: 'center',
+    },
+    logo: {
+      fontSize: 32,
+      fontWeight: '800',
+      color: colors.primary,
+      textAlign: 'center',
+    },
+    subtitle: {
+      textAlign: 'center',
+      color: colors.textSecondary,
+      marginBottom: spacing.lg,
+      marginTop: spacing.xs,
+    },
+    label: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: colors.text,
+      backgroundColor: colors.card,
+      marginBottom: spacing.md,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: radius.md,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginTop: spacing.xs,
+    },
+    buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+    linkWrap: { marginTop: spacing.md, alignItems: 'center' },
+    link: { color: colors.textSecondary, fontSize: 14 },
+    linkBold: { color: colors.primary, fontWeight: '700' },
+  });
 
   async function onSubmit() {
     if (!name.trim() || !email.trim() || password.length < 8) {
@@ -104,62 +165,3 @@ export default function Register() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    width: '100%',
-    maxWidth: 420,
-    alignSelf: 'center',
-  },
-  logo: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: colors.primary,
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-    marginTop: spacing.xs,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.card,
-    marginBottom: spacing.md,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  linkWrap: { marginTop: spacing.md, alignItems: 'center' },
-  link: { color: colors.textSecondary, fontSize: 14 },
-  linkBold: { color: colors.primary, fontWeight: '700' },
-});

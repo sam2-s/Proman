@@ -13,9 +13,11 @@ import {
 import { api } from '../api/client';
 import type { Board, Project } from '../api/types';
 import { useAuth } from '../context/auth';
-import { colors, radius, shadow, spacing } from '../theme';
+import { useTheme } from '../theme/Theme';
+import { radius, shadow, spacing } from '../theme';
 
 export default function Projects() {
+  const colors = useTheme();
   const { user, logout } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,6 +74,135 @@ export default function Projects() {
     if (boards[0]) router.push(`/board/${boards[0].id}`);
   }
 
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg },
+    header: {
+      paddingTop: spacing.xl,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    hello: { color: colors.textSecondary, fontSize: 14 },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+    iconBtn: {
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
+      backgroundColor: colors.bg,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    iconBtnText: { color: colors.text, fontWeight: '700', fontSize: 12 },
+    logoutBtn: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
+      backgroundColor: colors.bg,
+    },
+    logoutText: { color: colors.danger, fontWeight: '600' },
+    projectCard: {
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...shadow.card,
+    },
+    projectRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: radius.md,
+      backgroundColor: colors.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: { color: colors.primary, fontWeight: '800', fontSize: 18 },
+    projectName: { fontSize: 16, fontWeight: '700', color: colors.text },
+    projectDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+    roleBadge: {
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: radius.full,
+    },
+    roleText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
+    empty: {
+      alignItems: 'center',
+      paddingTop: 64,
+      paddingHorizontal: spacing.lg,
+    },
+    emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+    emptyText: {
+      textAlign: 'center',
+      color: colors.textSecondary,
+      marginTop: spacing.sm,
+      lineHeight: 20,
+    },
+    fab: {
+      position: 'absolute',
+      bottom: spacing.lg,
+      right: spacing.lg,
+      backgroundColor: colors.primary,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: 14,
+      borderRadius: radius.full,
+      ...shadow.card,
+    },
+    fabText: { color: '#fff', fontWeight: '700' },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(15,23,42,0.45)',
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    modalCard: {
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      maxWidth: 440,
+      width: '100%',
+      alignSelf: 'center',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: spacing.md,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      fontSize: 15,
+      color: colors.text,
+      marginBottom: spacing.sm,
+      backgroundColor: colors.card,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    btnGhost: { padding: 12, borderRadius: radius.md },
+    btnGhostText: { color: colors.textSecondary, fontWeight: '600' },
+    btnPrimary: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: spacing.md,
+      padding: 12,
+      borderRadius: radius.md,
+    },
+    btnPrimaryText: { color: '#fff', fontWeight: '700' },
+  });
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -79,9 +210,23 @@ export default function Projects() {
           <Text style={styles.hello}>Hi {user?.name?.split(' ')[0]}</Text>
           <Text style={styles.title}>Your projects</Text>
         </View>
-        <Pressable onPress={() => logout()} style={styles.logoutBtn}>
-          <Text style={styles.logoutText}>Log out</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            style={styles.iconBtn}
+            onPress={() => router.push('/search')}
+          >
+            <Text style={styles.iconBtnText}>Search</Text>
+          </Pressable>
+          <Pressable
+            style={styles.iconBtn}
+            onPress={() => router.push('/notifications')}
+          >
+            <Text style={styles.iconBtnText}>Bell</Text>
+          </Pressable>
+          <Pressable onPress={() => logout()} style={styles.logoutBtn}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </Pressable>
+        </View>
       </View>
 
       <FlatList
@@ -173,117 +318,3 @@ export default function Projects() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  hello: { color: colors.textSecondary, fontSize: 14 },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  logoutBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: colors.bg,
-  },
-  logoutText: { color: colors.danger, fontWeight: '600' },
-  projectCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadow.card,
-  },
-  projectRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { color: colors.primary, fontWeight: '800', fontSize: 18 },
-  projectName: { fontSize: 16, fontWeight: '700', color: colors.text },
-  projectDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  roleBadge: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radius.full,
-  },
-  roleText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
-  empty: { alignItems: 'center', paddingTop: 64, paddingHorizontal: spacing.lg },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  emptyText: {
-    textAlign: 'center',
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
-    lineHeight: 20,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-    borderRadius: radius.full,
-    ...shadow.card,
-  },
-  fabText: { color: '#fff', fontWeight: '700' },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15,23,42,0.45)',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    maxWidth: 440,
-    width: '100%',
-    alignSelf: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    fontSize: 15,
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  btnGhost: { padding: 12, borderRadius: radius.md },
-  btnGhostText: { color: colors.textSecondary, fontWeight: '600' },
-  btnPrimary: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    padding: 12,
-    borderRadius: radius.md,
-  },
-  btnPrimaryText: { color: '#fff', fontWeight: '700' },
-});
