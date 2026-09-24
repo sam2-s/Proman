@@ -10,10 +10,12 @@ repository rather than opening a public issue.
 - Passwords hashed with **Argon2id** (memory-hard KDF)
 - Stateless **JWT** auth (7-day expiry) sent as `Authorization: Bearer`
 - SQL uses **parameterized queries** exclusively (no string interpolation)
+- **SQLite foreign keys** enabled (`PRAGMA foreign_keys=ON`) for cascade deletes
 - CORS defaults to open origin in development — restrict before deploying
 - File uploads capped at **20 MB**; stored outside the web root under `uploads/`
 - WebSocket connections require a valid JWT at upgrade time
 - Project routes check **membership** (owner/editor/viewer) on every request
+- Search and activity endpoints filter by project membership
 
 ## Before production
 

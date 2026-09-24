@@ -33,6 +33,14 @@ comments
 attachments
   id, card_id → cards.id, filename, stored_name, mime, size,
   uploaded_by, created_at
+
+activity
+  id, project_id → projects.id, user_id, card_id, verb, summary,
+  created_at
+
+notifications
+  id, user_id → users.id, project_id → projects.id, card_id,
+  body, read, created_at
 ```
 
 ## Roles

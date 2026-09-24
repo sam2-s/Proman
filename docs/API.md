@@ -113,6 +113,41 @@ Partial update; also used for moving:
 ### POST /api/cards/:id/attachments  (multipart/form-data, field `file`)
 ### GET /api/attachments/:id  → file bytes
 
+## Search
+
+### GET /api/search?q=design
+
+Cards (title/description) across projects the caller belongs to.
+
+```json
+[
+  {
+    "id": 9,
+    "title": "Design homepage",
+    "priority": "high",
+    "due_date": "2026-10-01",
+    "column_name": "In Progress",
+    "board_name": "Main",
+    "project_id": 1,
+    "project_name": "Website"
+  }
+]
+```
+
+## Activity
+
+### GET /api/projects/:id/activity?limit=50
+
+Recent project activity (`verb`, `summary`, `created_at`).
+
+## Notifications
+
+### GET /api/notifications
+### POST /api/notifications/:id/read
+### POST /api/notifications/read-all
+
+In-app notifications (comments, assignments). Unread count is `read == 0`.
+
 ## Realtime
 
 ### WS /ws?project_id=1&token=<jwt>
@@ -125,7 +160,9 @@ Server pushes:
 { "type": "card_moved",   "project_id": 1, "card": { ... } }
 { "type": "card_deleted", "project_id": 1, "card_id": 9 }
 { "type": "column_created", "project_id": 1, "column": { ... } }
+{ "type": "column_deleted", "project_id": 1, "column_id": 3 }
 { "type": "comment_created", "project_id": 1, "card_id": 9, "comment": { ... } }
+{ "type": "notification_created", "project_id": 1, "notification": { ... } }
 ```
 
 Clients do not send mutations over WS — mutations go over REST, server broadcasts.

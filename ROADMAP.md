@@ -21,14 +21,18 @@
 - [x] WebSocket live sync
 - [x] Responsive layouts
 - [x] CI workflow (cargo + tsc)
-- [ ] Touch drag-and-drop gestures
-- [ ] Android / iOS EAS build configs
+- [x] Touch drag-and-drop gestures
+- [x] Android / iOS EAS build configs (APK preview)
+- [x] Search across projects
+- [x] Activity log
+- [x] In-app notifications
+- [x] Dark mode
+- [x] Document picker on mobile (expo-document-picker)
+- [x] Assignee avatars on cards
+- [x] Column rename / delete UI
+- [x] Server unit tests (auth + validation)
 
 ## Later
-- [ ] Notifications
-- [ ] Activity log
-- [ ] Dark mode
 - [ ] Offline support
+- [ ] Push notifications (OS)
 - [ ] EAS builds for App Store / Play Store
-- [ ] Document picker on mobile (expo-document-picker)
-- [ ] Assignee avatars on cards

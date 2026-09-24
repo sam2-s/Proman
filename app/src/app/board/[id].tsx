@@ -498,7 +498,7 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   },
   column: {
     width: 270,
-    backgroundColor: '#EEF2F7',
+    backgroundColor: colors.border + '66',
     borderRadius: radius.lg,
     padding: spacing.sm,
     minHeight: 200,
