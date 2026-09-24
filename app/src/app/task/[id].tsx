@@ -1,4 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
+import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,7 +17,14 @@ import {
   View,
 } from 'react-native';
 import { api, API_URL, getToken } from '../../api/client';
-import type { Attachment, Card, Comment, Subtask } from '../../api/types';
+import type {
+  Attachment,
+  BoardMember,
+  Card,
+  CardDetail,
+  Comment,
+  Subtask,
+} from '../../api/types';
 import { colors, radius, spacing } from '../../theme';
 
 export default function TaskScreen() {
@@ -23,6 +32,7 @@ export default function TaskScreen() {
   const cardId = Number(id);
 
   const [card, setCard] = useState<Card | null>(null);
+  const [members, setMembers] = useState<BoardMember[]>([]);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -34,12 +44,13 @@ export default function TaskScreen() {
   const load = useCallback(async () => {
     try {
       const [c, s, cm, a] = await Promise.all([
-        api.get<{ card: Card }>(`/api/cards/${cardId}`),
+        api.get<CardDetail>(`/api/cards/${cardId}`),
         api.get<Subtask[]>(`/api/cards/${cardId}/subtasks`),
         api.get<Comment[]>(`/api/cards/${cardId}/comments`),
         api.get<Attachment[]>(`/api/cards/${cardId}/attachments`),
       ]);
       setCard(c.card);
+      setMembers(c.members ?? []);
       setSubtasks(s);
       setComments(cm);
       setAttachments(a);
@@ -102,8 +113,6 @@ export default function TaskScreen() {
   }
 
   async function pickAndUpload() {
-    // Document picker would go here; use a simple prompt-free path with
-    // expo-image-picker style input when available. For now, allow web file input.
     if (Platform.OS === 'web') {
       const input = document.createElement('input');
       input.type = 'file';
@@ -123,11 +132,24 @@ export default function TaskScreen() {
         }
       };
       input.click();
-    } else {
-      Alert.alert(
-        'Attachments',
-        'On mobile, attach files from the web app or add expo-image-picker later.',
-      );
+      return;
+    }
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      await api.upload(`/api/cards/${cardId}/attachments`, {
+        name: asset.name,
+        uri: asset.uri,
+        type: asset.mimeType ?? 'application/octet-stream',
+      });
+      await load();
+    } catch (e) {
+      Alert.alert('Upload failed', e instanceof Error ? e.message : '');
     }
   }
 
@@ -145,6 +167,21 @@ export default function TaskScreen() {
         a.download = att.filename;
         a.click();
         URL.revokeObjectURL(url);
+        return;
+      }
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          // Share via temp path is limited on native; show URL for now
+          Alert.alert(
+            'Download',
+            `${API_URL}/api/attachments/${att.id}\n\nOpen in browser or copy the link.`,
+          );
+        };
+        reader.readAsDataURL(blob);
+      } else {
+        Alert.alert('Download', `${API_URL}/api/attachments/${att.id}`);
       }
     } catch {
       Alert.alert('Download failed');
@@ -229,6 +266,59 @@ export default function TaskScreen() {
                 </Pressable>
               ))}
             </View>
+          </View>
+        </View>
+
+        <View style={{ marginTop: spacing.md }}>
+          <Text style={styles.label}>Assignee</Text>
+          <View style={styles.chipRow}>
+            <Pressable
+              onPress={() => patchCard({ assignee_id: null })}
+              style={[
+                styles.chip,
+                !card.assignee_id && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  !card.assignee_id && { color: '#fff' },
+                ]}
+              >
+                Unassigned
+              </Text>
+            </Pressable>
+            {members.map((m) => (
+              <Pressable
+                key={m.user_id}
+                onPress={() => patchCard({ assignee_id: m.user_id })}
+                style={[
+                  styles.chip,
+                  styles.assigneeChip,
+                  card.assignee_id === m.user_id && {
+                    backgroundColor: colors.primaryLight,
+                    borderColor: colors.primary,
+                  },
+                ]}
+              >
+                <View style={styles.miniAvatar}>
+                  <Text style={styles.miniAvatarText}>
+                    {m.name.slice(0, 1).toUpperCase()}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.chipText,
+                    card.assignee_id === m.user_id && { color: colors.primary },
+                  ]}
+                >
+                  {m.name}
+                </Text>
+              </Pressable>
+            ))}
           </View>
         </View>
 
@@ -396,6 +486,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   chipText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  assigneeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingRight: 12,
+  },
+  miniAvatar: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniAvatarText: { fontSize: 10, fontWeight: '800', color: colors.primary },
   dateInput: {
     backgroundColor: colors.card,
     borderWidth: 1,
