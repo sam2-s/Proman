@@ -283,10 +283,11 @@ pub async fn add_subtask(
         return Err(ApiError::BadRequest("subtask title required".into()));
     }
 
-    let pos_row = sqlx::query("SELECT COALESCE(MAX(position), -1) + 1 AS p FROM subtasks WHERE card_id = ?")
-        .bind(id)
-        .fetch_one(&state.db)
-        .await?;
+    let pos_row =
+        sqlx::query("SELECT COALESCE(MAX(position), -1) + 1 AS p FROM subtasks WHERE card_id = ?")
+            .bind(id)
+            .fetch_one(&state.db)
+            .await?;
     let position: i64 = pos_row.get("p");
 
     let sub = sqlx::query_as::<_, Subtask>(

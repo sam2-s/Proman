@@ -156,16 +156,15 @@ pub async fn download(
     let mut response = Response::new(Body::from(bytes));
     response.headers_mut().insert(
         header::CONTENT_TYPE,
-        mime.parse().unwrap_or(header::HeaderValue::from_static(
-            "application/octet-stream",
-        )),
+        mime.parse()
+            .unwrap_or(header::HeaderValue::from_static("application/octet-stream")),
     );
     let disposition = format!("attachment; filename=\"{}\"", filename.replace('"', ""));
     response.headers_mut().insert(
         header::CONTENT_DISPOSITION,
-        disposition.parse().unwrap_or_else(|_| {
-            header::HeaderValue::from_static("attachment")
-        }),
+        disposition
+            .parse()
+            .unwrap_or_else(|_| header::HeaderValue::from_static("attachment")),
     );
     Ok(response)
 }

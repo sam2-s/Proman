@@ -3,8 +3,8 @@ use sqlx::SqlitePool;
 use std::str::FromStr;
 
 pub async fn init() -> anyhow::Result<SqlitePool> {
-    let url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:proman.db?mode=rwc".to_string());
+    let url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:proman.db?mode=rwc".to_string());
 
     let opts = SqliteConnectOptions::from_str(&url)?.create_if_missing(true);
 

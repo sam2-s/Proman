@@ -78,13 +78,11 @@ pub async fn create(
     .fetch_one(&mut *tx)
     .await?;
 
-    sqlx::query(
-        "INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, 'owner')",
-    )
-    .bind(project.id)
-    .bind(user_id)
-    .execute(&mut *tx)
-    .await?;
+    sqlx::query("INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, 'owner')")
+        .bind(project.id)
+        .bind(user_id)
+        .execute(&mut *tx)
+        .await?;
 
     // Default board with columns
     let board = sqlx::query_as::<_, Board>(
@@ -152,7 +150,9 @@ pub async fn remove(
 ) -> ApiResult<StatusCode> {
     let role = ensure_member(&state, id, user_id).await?;
     if role != "owner" {
-        return Err(ApiError::Forbidden("only the owner can delete a project".into()));
+        return Err(ApiError::Forbidden(
+            "only the owner can delete a project".into(),
+        ));
     }
     sqlx::query("DELETE FROM projects WHERE id = ?")
         .bind(id)

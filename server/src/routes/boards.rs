@@ -30,7 +30,11 @@ pub async fn column_project(state: &SharedState, column_id: i64) -> ApiResult<i6
     .ok_or_else(|| ApiError::NotFound("column not found".into()))
 }
 
-pub async fn ensure_member(state: &SharedState, project_id: i64, user_id: i64) -> ApiResult<String> {
+pub async fn ensure_member(
+    state: &SharedState,
+    project_id: i64,
+    user_id: i64,
+) -> ApiResult<String> {
     let row = sqlx::query("SELECT role FROM project_members WHERE project_id = ? AND user_id = ?")
         .bind(project_id)
         .bind(user_id)
@@ -149,11 +153,12 @@ pub async fn create_column(
     let position = match req.position {
         Some(p) => p,
         None => {
-            let row =
-                sqlx::query("SELECT COALESCE(MAX(position), -1) + 1 AS p FROM columns WHERE board_id = ?")
-                    .bind(id)
-                    .fetch_one(&state.db)
-                    .await?;
+            let row = sqlx::query(
+                "SELECT COALESCE(MAX(position), -1) + 1 AS p FROM columns WHERE board_id = ?",
+            )
+            .bind(id)
+            .fetch_one(&state.db)
+            .await?;
             row.get::<i64, _>("p")
         }
     };

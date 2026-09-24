@@ -17,7 +17,9 @@ pub async fn register(
         return Err(ApiError::BadRequest("valid email required".into()));
     }
     if req.password.len() < 8 {
-        return Err(ApiError::BadRequest("password must be at least 8 characters".into()));
+        return Err(ApiError::BadRequest(
+            "password must be at least 8 characters".into(),
+        ));
     }
     if req.name.trim().is_empty() {
         return Err(ApiError::BadRequest("name required".into()));
@@ -60,10 +62,11 @@ pub async fn login(
     Json(req): Json<LoginReq>,
 ) -> ApiResult<Json<AuthResponse>> {
     let email = req.email.trim().to_lowercase();
-    let row = sqlx::query("SELECT id, email, password_hash, name, created_at FROM users WHERE email = ?")
-        .bind(&email)
-        .fetch_optional(&state.db)
-        .await?;
+    let row =
+        sqlx::query("SELECT id, email, password_hash, name, created_at FROM users WHERE email = ?")
+            .bind(&email)
+            .fetch_optional(&state.db)
+            .await?;
 
     let row = row.ok_or_else(|| ApiError::Unauthorized("invalid credentials".into()))?;
     let hash: String = row.get("password_hash");

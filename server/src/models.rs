@@ -93,14 +93,39 @@ pub struct Attachment {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum WsEvent {
-    CardCreated { project_id: i64, card: Card },
-    CardUpdated { project_id: i64, card: Card },
-    CardMoved { project_id: i64, card: Card },
-    CardDeleted { project_id: i64, card_id: i64 },
-    ColumnCreated { project_id: i64, column: Column },
-    ColumnUpdated { project_id: i64, column: Column },
-    CommentCreated { project_id: i64, card_id: i64, comment: Comment },
-    SubtaskUpdated { project_id: i64, card_id: i64 },
+    CardCreated {
+        project_id: i64,
+        card: Card,
+    },
+    CardUpdated {
+        project_id: i64,
+        card: Card,
+    },
+    CardMoved {
+        project_id: i64,
+        card: Card,
+    },
+    CardDeleted {
+        project_id: i64,
+        card_id: i64,
+    },
+    ColumnCreated {
+        project_id: i64,
+        column: Column,
+    },
+    ColumnUpdated {
+        project_id: i64,
+        column: Column,
+    },
+    CommentCreated {
+        project_id: i64,
+        card_id: i64,
+        comment: Comment,
+    },
+    SubtaskUpdated {
+        project_id: i64,
+        card_id: i64,
+    },
 }
 
 #[derive(Debug, Deserialize)]

@@ -25,9 +25,8 @@ async fn main() -> anyhow::Result<()> {
         )
         .init();
 
-    let upload_dir = PathBuf::from(
-        std::env::var("UPLOAD_DIR").unwrap_or_else(|_| "../uploads".to_string()),
-    );
+    let upload_dir =
+        PathBuf::from(std::env::var("UPLOAD_DIR").unwrap_or_else(|_| "../uploads".to_string()));
     std::fs::create_dir_all(&upload_dir)?;
 
     let db = db::init().await?;
