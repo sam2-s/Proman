@@ -4,15 +4,17 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { Panel } from '../components/Panel';
+import { StatusBar } from '../components/StatusBar';
+import { TuiButton } from '../components/Tui';
 import { useAuth } from '../context/auth';
+import { font, spacing } from '../theme';
 import { useTheme } from '../theme/Theme';
-import { radius, spacing } from '../theme';
 
 export default function Register() {
   const colors = useTheme();
@@ -23,62 +25,60 @@ export default function Register() {
   const [busy, setBusy] = useState(false);
 
   const styles = StyleSheet.create({
-    container: {
+    screen: {
       flex: 1,
       backgroundColor: colors.bg,
       justifyContent: 'center',
       padding: spacing.lg,
     },
-    card: {
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: spacing.lg,
-      borderWidth: 1,
-      borderColor: colors.border,
-      width: '100%',
-      maxWidth: 420,
-      alignSelf: 'center',
-    },
-    logo: {
-      fontSize: 32,
+    banner: {
+      fontFamily: font.mono,
+      fontSize: 28,
       fontWeight: '800',
       color: colors.primary,
       textAlign: 'center',
+      letterSpacing: 4,
+      marginBottom: spacing.xs,
     },
-    subtitle: {
+    tagline: {
+      fontFamily: font.mono,
+      fontSize: 11,
+      color: colors.textMuted,
       textAlign: 'center',
-      color: colors.textSecondary,
+      letterSpacing: 1,
       marginBottom: spacing.lg,
-      marginTop: spacing.xs,
+    },
+    field: {
+      marginBottom: spacing.md,
     },
     label: {
-      fontSize: 13,
-      fontWeight: '600',
+      fontFamily: font.mono,
+      fontSize: 11,
+      fontWeight: '700',
       color: colors.textSecondary,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
       marginBottom: spacing.xs,
     },
     input: {
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radius.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 12,
-      fontSize: 16,
-      color: colors.text,
+      borderColor: colors.line,
       backgroundColor: colors.card,
-      marginBottom: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+      fontFamily: font.mono,
+      fontSize: 14,
+      color: colors.text,
     },
-    button: {
-      backgroundColor: colors.primary,
-      borderRadius: radius.md,
-      paddingVertical: 14,
-      alignItems: 'center',
+    hint: {
+      fontFamily: font.mono,
+      fontSize: 10,
+      color: colors.textMuted,
       marginTop: spacing.xs,
     },
-    buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-    linkWrap: { marginTop: spacing.md, alignItems: 'center' },
-    link: { color: colors.textSecondary, fontSize: 14 },
-    linkBold: { color: colors.primary, fontWeight: '700' },
+    footer: {
+      marginTop: spacing.md,
+    },
   });
 
   async function onSubmit() {
@@ -105,62 +105,74 @@ export default function Register() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.card}>
-        <Text style={styles.logo}>Proman</Text>
-        <Text style={styles.subtitle}>Create your account</Text>
+      <Text style={styles.banner}>PROMAN</Text>
+      <Text style={styles.tagline}>_ new operator registration _</Text>
 
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Ada Lovelace"
-          placeholderTextColor={colors.textMuted}
-        />
+      <View style={{ width: '100%', maxWidth: 420, alignSelf: 'center' }}>
+        <Panel title="create account" accent>
+          <View style={styles.field}>
+            <Text style={styles.label}>display name</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Ada Lovelace"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
 
-        <Text style={styles.label}>Username</Text>
-        <TextInput
-          style={styles.input}
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={username}
-          onChangeText={setUsername}
-          placeholder="your-handle"
-          placeholderTextColor={colors.textMuted}
-        />
+          <View style={styles.field}>
+            <Text style={styles.label}>username</Text>
+            <TextInput
+              style={styles.input}
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={username}
+              onChangeText={setUsername}
+              placeholder="your-handle"
+              placeholderTextColor={colors.textMuted}
+            />
+            <Text style={styles.hint}>3-32 chars: a-z 0-9 _ - only</Text>
+          </View>
 
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          placeholder="At least 8 characters"
-          placeholderTextColor={colors.textMuted}
-          onSubmitEditing={onSubmit}
-        />
+          <View style={styles.field}>
+            <Text style={styles.label}>password</Text>
+            <TextInput
+              style={styles.input}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              placeholder="at least 8 characters"
+              placeholderTextColor={colors.textMuted}
+              onSubmitEditing={onSubmit}
+            />
+          </View>
 
-        <Pressable
-          style={[styles.button, busy && { opacity: 0.6 }]}
-          onPress={onSubmit}
-          disabled={busy}
-        >
-          <Text style={styles.buttonText}>
-            {busy ? 'Creating…' : 'Create account'}
-          </Text>
-        </Pressable>
+          <TuiButton
+            label={busy ? 'creating...' : 'create account'}
+            variant="primary"
+            onPress={onSubmit}
+            disabled={busy}
+          />
 
-        <Link href="/login" asChild>
-          <Pressable style={styles.linkWrap}>
-            <Text style={styles.link}>
-              Already have an account?{' '}
-              <Text style={styles.linkBold}>Sign in</Text>
-            </Text>
-          </Pressable>
-        </Link>
+          <View style={{ marginTop: spacing.md }}>
+            <Link href="/login" asChild>
+              <TuiButton label="back to sign in" variant="ghost" compact />
+            </Link>
+          </View>
+        </Panel>
+
+        <View style={styles.footer}>
+          <StatusBar
+            segments={[
+              { text: 'proman v0.1.0' },
+              { text: busy ? 'registering...' : 'ready', color: busy ? colors.warning : colors.success },
+            ]}
+          />
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
