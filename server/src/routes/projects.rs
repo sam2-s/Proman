@@ -8,17 +8,8 @@ use sqlx::Row;
 use crate::auth::AuthUser;
 use crate::error::{ApiError, ApiResult};
 use crate::models::{Board, Member, Project};
+use crate::permissions::{require, Role};
 use crate::state::SharedState;
-
-async fn ensure_member(state: &SharedState, project_id: i64, user_id: i64) -> ApiResult<String> {
-    let row = sqlx::query("SELECT role FROM project_members WHERE project_id = ? AND user_id = ?")
-        .bind(project_id)
-        .bind(user_id)
-        .fetch_optional(&state.db)
-        .await?;
-    row.map(|r| r.get::<String, _>("role"))
-        .ok_or_else(|| ApiError::Forbidden("not a project member".into()))
-}
 
 pub async fn list(
     State(state): State<SharedState>,
@@ -110,7 +101,7 @@ pub async fn detail(
     AuthUser(user_id): AuthUser,
     Path(id): Path<i64>,
 ) -> ApiResult<Json<Value>> {
-    ensure_member(&state, id, user_id).await?;
+    require(&state, id, user_id, Role::Viewer).await?;
 
     let project = sqlx::query_as::<_, Project>(
         "SELECT id, name, description, owner_id, created_at FROM projects WHERE id = ?",
@@ -148,12 +139,7 @@ pub async fn remove(
     AuthUser(user_id): AuthUser,
     Path(id): Path<i64>,
 ) -> ApiResult<StatusCode> {
-    let role = ensure_member(&state, id, user_id).await?;
-    if role != "owner" {
-        return Err(ApiError::Forbidden(
-            "only the owner can delete a project".into(),
-        ));
-    }
+    require(&state, id, user_id, Role::Owner).await?;
     sqlx::query("DELETE FROM projects WHERE id = ?")
         .bind(id)
         .execute(&state.db)
@@ -178,11 +164,8 @@ pub async fn add_member(
     Path(id): Path<i64>,
     Json(req): Json<AddMember>,
 ) -> ApiResult<(StatusCode, Json<Member>)> {
-    let role = ensure_member(&state, id, user_id).await?;
-    if role != "owner" {
-        return Err(ApiError::Forbidden("only the owner can add members".into()));
-    }
-    if !["owner", "editor", "viewer"].contains(&req.role.as_str()) {
+    require(&state, id, user_id, Role::Admin).await?;
+    if !["owner", "admin", "editor", "viewer"].contains(&req.role.as_str()) {
         return Err(ApiError::BadRequest("invalid role".into()));
     }
 

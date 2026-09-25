@@ -8,6 +8,7 @@ use sqlx::Row;
 use crate::auth::AuthUser;
 use crate::error::{ApiError, ApiResult};
 use crate::models::{Board, Card, Column, WsEvent};
+use crate::permissions::{require, Role};
 use crate::state::SharedState;
 
 async fn board_project(state: &SharedState, board_id: i64) -> ApiResult<i64> {
@@ -30,18 +31,16 @@ pub async fn column_project(state: &SharedState, column_id: i64) -> ApiResult<i6
     .ok_or_else(|| ApiError::NotFound("column not found".into()))
 }
 
+/// Membership check (any role). Kept for read paths; mutations should call
+/// [`crate::permissions::require`] with their minimum role.
 pub async fn ensure_member(
     state: &SharedState,
     project_id: i64,
     user_id: i64,
 ) -> ApiResult<String> {
-    let row = sqlx::query("SELECT role FROM project_members WHERE project_id = ? AND user_id = ?")
-        .bind(project_id)
-        .bind(user_id)
-        .fetch_optional(&state.db)
-        .await?;
-    row.map(|r| r.get::<String, _>("role"))
-        .ok_or_else(|| ApiError::Forbidden("not a project member".into()))
+    crate::permissions::require(state, project_id, user_id, crate::permissions::Role::Viewer)
+        .await
+        .map(|role| role.as_str().to_string())
 }
 
 pub async fn list_for_project(
@@ -70,7 +69,7 @@ pub async fn create(
     Path(id): Path<i64>,
     Json(req): Json<CreateBoard>,
 ) -> ApiResult<(StatusCode, Json<Board>)> {
-    ensure_member(&state, id, user_id).await?;
+    require(&state, id, user_id, Role::Editor).await?;
     let name = req.name.trim();
     if name.is_empty() {
         return Err(ApiError::BadRequest("board name required".into()));
@@ -165,7 +164,7 @@ pub async fn create_column(
     Json(req): Json<CreateColumn>,
 ) -> ApiResult<(StatusCode, Json<Column>)> {
     let project_id = board_project(&state, id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     let name = req.name.trim();
     if name.is_empty() {
@@ -214,7 +213,7 @@ pub async fn update_column(
     Json(req): Json<UpdateColumn>,
 ) -> ApiResult<Json<Column>> {
     let project_id = column_project(&state, id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     if let Some(name) = &req.name {
         sqlx::query("UPDATE columns SET name = ? WHERE id = ?")
@@ -251,7 +250,7 @@ pub async fn delete_column(
     Path(id): Path<i64>,
 ) -> ApiResult<StatusCode> {
     let project_id = column_project(&state, id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
     sqlx::query("DELETE FROM columns WHERE id = ?")
         .bind(id)
         .execute(&state.db)

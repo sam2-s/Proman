@@ -8,6 +8,7 @@ use sqlx::Row;
 use crate::auth::AuthUser;
 use crate::error::{ApiError, ApiResult};
 use crate::models::{Card, Subtask, WsEvent};
+use crate::permissions::{require, Role};
 use crate::routes::boards::ensure_member;
 use crate::state::SharedState;
 
@@ -95,7 +96,7 @@ pub async fn create(
     Json(req): Json<CreateCard>,
 ) -> ApiResult<(StatusCode, Json<Card>)> {
     let project_id = super::boards::column_project(&state, column_id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     let title = req.title.trim();
     if title.is_empty() {
@@ -205,7 +206,7 @@ pub async fn update(
     Json(req): Json<UpdateCard>,
 ) -> ApiResult<Json<Card>> {
     let project_id = card_project(&state, id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     if let Some(p) = &req.priority {
         validate_priority(p)?;
@@ -309,7 +310,7 @@ pub async fn remove(
     Path(id): Path<i64>,
 ) -> ApiResult<StatusCode> {
     let project_id = card_project(&state, id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
     sqlx::query("DELETE FROM cards WHERE id = ?")
         .bind(id)
         .execute(&state.db)
@@ -358,7 +359,7 @@ pub async fn add_subtask(
     Json(req): Json<CreateSubtask>,
 ) -> ApiResult<(StatusCode, Json<Subtask>)> {
     let project_id = card_project(&state, id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
     let title = req.title.trim();
     if title.is_empty() {
         return Err(ApiError::BadRequest("subtask title required".into()));
@@ -407,7 +408,7 @@ pub async fn update_subtask(
         .ok_or_else(|| ApiError::NotFound("subtask not found".into()))?;
     let card_id: i64 = row.get("card_id");
     let project_id = card_project(&state, card_id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     if let Some(t) = &req.title {
         sqlx::query("UPDATE subtasks SET title = ? WHERE id = ?")
@@ -457,7 +458,7 @@ pub async fn delete_subtask(
         .ok_or_else(|| ApiError::NotFound("subtask not found".into()))?;
     let card_id: i64 = row.get("card_id");
     let project_id = card_project(&state, card_id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     sqlx::query("DELETE FROM subtasks WHERE id = ?")
         .bind(id)

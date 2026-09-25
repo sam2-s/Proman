@@ -7,6 +7,7 @@ use sqlx::Row;
 use crate::auth::AuthUser;
 use crate::error::{ApiError, ApiResult};
 use crate::models::{Comment, WsEvent};
+use crate::permissions::{require, Role};
 use crate::routes::boards::ensure_member;
 use crate::state::SharedState;
 
@@ -55,7 +56,7 @@ pub async fn create(
     Json(req): Json<CreateComment>,
 ) -> ApiResult<(StatusCode, Json<Comment>)> {
     let project_id = card_project(&state, card_id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     let body = req.body.trim();
     if body.is_empty() {

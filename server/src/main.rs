@@ -11,6 +11,7 @@ mod db;
 mod error;
 mod feed_helpers;
 mod models;
+mod permissions;
 mod routes;
 mod state;
 mod ws;

@@ -8,6 +8,7 @@ use sqlx::Row;
 use crate::auth::AuthUser;
 use crate::error::{ApiError, ApiResult};
 use crate::models::Attachment;
+use crate::permissions::{require, Role};
 use crate::routes::boards::ensure_member;
 use crate::state::SharedState;
 
@@ -52,7 +53,7 @@ pub async fn upload(
     mut multipart: Multipart,
 ) -> ApiResult<(StatusCode, Json<Attachment>)> {
     let project_id = card_project(&state, card_id).await?;
-    ensure_member(&state, project_id, user_id).await?;
+    require(&state, project_id, user_id, Role::Editor).await?;
 
     let mut filename = String::from("upload.bin");
     let mut mime = String::from("application/octet-stream");
