@@ -21,7 +21,7 @@ export default function MembersScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
-  const [email, setEmail] = useState('');
+  const [invite, setInvite] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -39,14 +39,14 @@ export default function MembersScreen() {
   }, [load]);
 
   async function addMember() {
-    if (!email.trim()) return;
+    if (!invite.trim()) return;
     setBusy(true);
     try {
       await api.post(`/api/projects/${projectId}/members`, {
-        email: email.trim(),
+        username: invite.trim(),
         role: 'editor',
       });
-      setEmail('');
+      setInvite('');
       await load();
     } catch (e) {
       Alert.alert('Could not add', e instanceof Error ? e.message : '');
@@ -73,17 +73,17 @@ export default function MembersScreen() {
           <View>
             <Text style={styles.projectName}>{detail.project.name}</Text>
             <Text style={styles.subtitle}>
-              Invite teammates by email — they need a Proman account.
+              Invite teammates by username — they need a Proman account.
             </Text>
             <View style={styles.inviteRow}>
               <TextInput
                 style={styles.input}
-                placeholder="teammate@example.com"
+                placeholder="teammate-handle"
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="none"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
+                autoCorrect={false}
+                value={invite}
+                onChangeText={setInvite}
                 onSubmitEditing={addMember}
               />
               <Pressable
@@ -116,7 +116,7 @@ function MemberRow({ member }: { member: Member }) {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.name}>{member.name}</Text>
-        <Text style={styles.email}>{member.email}</Text>
+        <Text style={styles.handle}>@{member.username}</Text>
       </View>
       <View
         style={[
@@ -197,7 +197,7 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   },
   avatarText: { color: colors.primary, fontWeight: '800', fontSize: 16 },
   name: { fontWeight: '700', color: colors.text, fontSize: 15 },
-  email: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+  handle: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
   role: {
     backgroundColor: colors.bg,
     paddingHorizontal: 10,

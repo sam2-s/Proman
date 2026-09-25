@@ -18,7 +18,7 @@ export default function Register() {
   const colors = useTheme();
   const { register } = useAuth();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -82,16 +82,16 @@ export default function Register() {
   });
 
   async function onSubmit() {
-    if (!name.trim() || !email.trim() || password.length < 8) {
+    if (!name.trim() || !username.trim() || password.length < 8) {
       Alert.alert(
         'Check fields',
-        'Name, email, and a password of 8+ characters are required.',
+        'Name, username, and a password of 8+ characters are required.',
       );
       return;
     }
     setBusy(true);
     try {
-      await register(name.trim(), email.trim(), password);
+      await register(name.trim(), username.trim(), password);
       router.replace('/projects');
     } catch (e) {
       Alert.alert(
@@ -121,14 +121,14 @@ export default function Register() {
           placeholderTextColor={colors.textMuted}
         />
 
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>Username</Text>
         <TextInput
           style={styles.input}
           autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
+          autoCorrect={false}
+          value={username}
+          onChangeText={setUsername}
+          placeholder="your-handle"
           placeholderTextColor={colors.textMuted}
         />
 

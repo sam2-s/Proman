@@ -2,8 +2,10 @@ export type Role = 'owner' | 'editor' | 'viewer';
 
 export interface User {
   id: number;
-  email: string;
+  username: string;
   name: string;
+  avatar_url: string | null;
+  is_admin: boolean;
   created_at?: string;
 }
 
@@ -26,7 +28,8 @@ export interface Member {
   user_id: number;
   role: Role;
   name: string;
-  email: string;
+  username: string;
+  avatar_url: string | null;
 }
 
 export interface Board {
@@ -91,7 +94,8 @@ export interface Attachment {
 export interface BoardMember {
   user_id: number;
   name: string;
-  email: string;
+  username: string;
+  avatar_url: string | null;
   role: Role;
 }
 

@@ -12,8 +12,8 @@ import type { AuthResponse, User } from '../api/types';
 interface AuthState {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -39,9 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     const res = await api.post<AuthResponse>('/api/auth/login', {
-      email,
+      username,
       password,
     });
     await setToken(res.token);
@@ -49,10 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (name: string, email: string, password: string) => {
+    async (name: string, username: string, password: string) => {
       const res = await api.post<AuthResponse>('/api/auth/register', {
         name,
-        email,
+        username,
         password,
       });
       await setToken(res.token);

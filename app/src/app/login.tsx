@@ -17,7 +17,7 @@ import { radius, spacing } from '../theme';
 export default function Login() {
   const colors = useTheme();
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -81,13 +81,13 @@ export default function Login() {
   });
 
   async function onSubmit() {
-    if (!email.trim() || !password) {
-      Alert.alert('Missing fields', 'Enter email and password.');
+    if (!username.trim() || !password) {
+      Alert.alert('Missing fields', 'Enter username and password.');
       return;
     }
     setBusy(true);
     try {
-      await login(email.trim(), password);
+      await login(username.trim(), password);
       router.replace('/projects');
     } catch (e) {
       Alert.alert('Sign in failed', e instanceof Error ? e.message : 'Try again');
@@ -105,15 +105,16 @@ export default function Login() {
         <Text style={styles.logo}>Proman</Text>
         <Text style={styles.subtitle}>Sign in to your workspace</Text>
 
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>Username</Text>
         <TextInput
           style={styles.input}
           autoCapitalize="none"
-          keyboardType="email-address"
-          autoComplete="email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
+          autoCorrect={false}
+          autoComplete="username"
+          textContentType="username"
+          value={username}
+          onChangeText={setUsername}
+          placeholder="your-handle"
           placeholderTextColor={colors.textMuted}
         />
 

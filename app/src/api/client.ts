@@ -9,6 +9,11 @@ export const API_URL =
 
 export const WS_URL = API_URL.replace(/^http/, 'ws');
 
+/** Absolute URL for a public avatar path (e.g. `/api/avatars/8`). */
+export function avatarSrc(path?: string | null): string | undefined {
+  return path ? `${API_URL}${path}` : undefined;
+}
+
 const TOKEN_KEY = 'proman_token';
 
 export async function getToken(): Promise<string | null> {
