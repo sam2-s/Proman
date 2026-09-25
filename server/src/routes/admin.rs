@@ -111,3 +111,77 @@ pub async fn delete_user(
     tracing::warn!("admin {user_id} deleted user {target_id}");
     Ok(StatusCode::NO_CONTENT)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support;
+
+    #[tokio::test]
+    async fn non_admins_are_rejected() {
+        let state = test_support::state().await;
+        let regular = test_support::add_user(&state, "worker").await;
+
+        let res = list_users(State(state.clone()), AuthUser(regular)).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+
+        let res = set_is_admin(
+            State(state.clone()),
+            AuthUser(regular),
+            Path(99),
+            Json(UpdateIsAdmin { is_admin: true }),
+        )
+        .await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+
+        let res = delete_user(State(state), AuthUser(regular), Path(99)).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+    }
+
+    #[tokio::test]
+    async fn admin_can_list_and_toggle() {
+        let state = test_support::state().await;
+        let boss = test_support::add_user(&state, "boss").await;
+        let worker = test_support::add_user(&state, "worker").await;
+        test_support::set_global_admin(&state, boss).await;
+
+        let Json(users) = list_users(State(state.clone()), AuthUser(boss))
+            .await
+            .unwrap();
+        assert_eq!(users.len(), 2);
+
+        // grant then revoke
+        set_is_admin(
+            State(state.clone()),
+            AuthUser(boss),
+            Path(worker),
+            Json(UpdateIsAdmin { is_admin: true }),
+        )
+        .await
+        .expect("grant");
+        assert!(crate::permissions::is_global_admin(&state, worker)
+            .await
+            .unwrap());
+
+        // lockout guards
+        let res = set_is_admin(
+            State(state.clone()),
+            AuthUser(boss),
+            Path(boss),
+            Json(UpdateIsAdmin { is_admin: false }),
+        )
+        .await;
+        assert!(matches!(res, Err(ApiError::BadRequest(_))));
+
+        let res = delete_user(State(state.clone()), AuthUser(boss), Path(boss)).await;
+        assert!(matches!(res, Err(ApiError::BadRequest(_))));
+
+        let res = delete_user(State(state.clone()), AuthUser(boss), Path(999)).await;
+        assert!(matches!(res, Err(ApiError::NotFound(_))));
+
+        let status = delete_user(State(state), AuthUser(boss), Path(worker))
+            .await
+            .unwrap();
+        assert_eq!(status, StatusCode::NO_CONTENT);
+    }
+}

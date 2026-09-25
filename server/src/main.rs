@@ -14,6 +14,8 @@ mod models;
 mod permissions;
 mod routes;
 mod state;
+#[cfg(test)]
+mod test_support;
 mod ws;
 
 pub use state::AppState;
