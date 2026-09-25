@@ -40,6 +40,10 @@ pub fn router(state: SharedState) -> Router {
             get(projects::detail).delete(projects::remove),
         )
         .route("/api/projects/{id}/members", post(projects::add_member))
+        .route(
+            "/api/projects/{id}/members/{user_id}",
+            patch(projects::update_member).delete(projects::remove_member),
+        )
         .route("/api/projects/{id}/activity", get(feed::list_activity))
         .route(
             "/api/projects/{id}/boards",

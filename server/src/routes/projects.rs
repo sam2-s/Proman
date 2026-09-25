@@ -198,3 +198,88 @@ pub async fn add_member(
     };
     Ok((StatusCode::CREATED, Json(member)))
 }
+
+/// Fetch a member row (after a mutation) for responses.
+async fn member_row(state: &SharedState, project_id: i64, user_id: i64) -> ApiResult<Member> {
+    sqlx::query_as::<_, Member>(
+        r#"SELECT m.project_id, m.user_id, m.role, u.name, u.username, u.avatar_url
+           FROM project_members m JOIN users u ON u.id = m.user_id
+           WHERE m.project_id = ? AND m.user_id = ?"#,
+    )
+    .bind(project_id)
+    .bind(user_id)
+    .fetch_optional(&state.db)
+    .await?
+    .ok_or_else(|| ApiError::NotFound("not a project member".into()))
+}
+
+async fn project_owner_id(state: &SharedState, project_id: i64) -> ApiResult<i64> {
+    let row = sqlx::query("SELECT owner_id FROM projects WHERE id = ?")
+        .bind(project_id)
+        .fetch_optional(&state.db)
+        .await?
+        .ok_or_else(|| ApiError::NotFound("project not found".into()))?;
+    Ok(row.get("owner_id"))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateMember {
+    pub role: String,
+}
+
+/// PATCH /api/projects/{id}/members/{user_id} — change a member's role.
+pub async fn update_member(
+    State(state): State<SharedState>,
+    AuthUser(user_id): AuthUser,
+    Path((id, member_id)): Path<(i64, i64)>,
+    Json(req): Json<UpdateMember>,
+) -> ApiResult<Json<Member>> {
+    require(&state, id, user_id, Role::Admin).await?;
+
+    if !["admin", "editor", "viewer"].contains(&req.role.as_str()) {
+        return Err(ApiError::BadRequest(
+            "role must be admin, editor, or viewer".into(),
+        ));
+    }
+    if project_owner_id(&state, id).await? == member_id {
+        return Err(ApiError::Forbidden(
+            "the project owner's role cannot be changed".into(),
+        ));
+    }
+
+    let updated =
+        sqlx::query("UPDATE project_members SET role = ? WHERE project_id = ? AND user_id = ?")
+            .bind(&req.role)
+            .bind(id)
+            .bind(member_id)
+            .execute(&state.db)
+            .await?;
+    if updated.rows_affected() == 0 {
+        return Err(ApiError::NotFound("not a project member".into()));
+    }
+    member_row(&state, id, member_id).await.map(Json)
+}
+
+/// DELETE /api/projects/{id}/members/{user_id} — remove a member.
+pub async fn remove_member(
+    State(state): State<SharedState>,
+    AuthUser(user_id): AuthUser,
+    Path((id, member_id)): Path<(i64, i64)>,
+) -> ApiResult<StatusCode> {
+    require(&state, id, user_id, Role::Admin).await?;
+
+    if project_owner_id(&state, id).await? == member_id {
+        return Err(ApiError::Forbidden(
+            "the project owner cannot be removed".into(),
+        ));
+    }
+    let deleted = sqlx::query("DELETE FROM project_members WHERE project_id = ? AND user_id = ?")
+        .bind(id)
+        .bind(member_id)
+        .execute(&state.db)
+        .await?;
+    if deleted.rows_affected() == 0 {
+        return Err(ApiError::NotFound("not a project member".into()));
+    }
+    Ok(StatusCode::NO_CONTENT)
+}
