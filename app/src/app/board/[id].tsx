@@ -17,7 +17,7 @@ import { useAuth } from '../../context/auth';
 import { useBoard } from '../../hooks/useBoard';
 import { useDragDrop } from '../../hooks/useDragDrop';
 import { useProjectSocket } from '../../hooks/useProjectSocket';
-import { radius, spacing } from '../../theme';
+import { font, spacing } from '../../theme';
 import { useTheme } from '../../theme/Theme';
 import { DragGhost, TaskCard } from '../../components/TaskCard';
 
@@ -193,7 +193,7 @@ export default function BoardScreen() {
       <View style={styles.center}>
         <Text style={styles.errorText}>{error ?? 'Board not found'}</Text>
         <Pressable onPress={reload} style={styles.retryBtn}>
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={styles.retryText}>[ retry ]</Text>
         </Pressable>
       </View>
     );
@@ -212,7 +212,7 @@ export default function BoardScreen() {
               ]}
             />
             <Text style={styles.status}>
-              {connected ? 'Live' : 'Offline'} · {user?.name}
+              {connected ? '[LIVE]' : '[OFFLINE]'} {user?.name}
               {myRole ? ` · ${myRole}` : user?.is_admin ? ' · admin' : ''}
               {!canEdit ? ' · read-only' : ''}
               {dd.activeCardId ? ' · dragging' : ''}
@@ -224,13 +224,13 @@ export default function BoardScreen() {
             style={styles.toolBtn}
             onPress={() => router.push(`/project/${projectId}/timeline`)}
           >
-            <Text style={styles.toolBtnText}>Timeline</Text>
+            <Text style={styles.toolBtnText}>[ timeline ]</Text>
           </Pressable>
           <Pressable
             style={styles.toolBtn}
             onPress={() => router.push(`/project/${projectId}/calendar`)}
           >
-            <Text style={styles.toolBtnText}>Calendar</Text>
+            <Text style={styles.toolBtnText}>[ calendar ]</Text>
           </Pressable>
           <Pressable
             style={styles.toolBtn}
@@ -238,20 +238,20 @@ export default function BoardScreen() {
               router.push(`/project/${projectId}/activity`)
             }
           >
-            <Text style={styles.toolBtnText}>Activity</Text>
+            <Text style={styles.toolBtnText}>[ activity ]</Text>
           </Pressable>
           <Pressable
             style={styles.toolBtn}
             onPress={() => router.push(`/project/${projectId}/members`)}
           >
-            <Text style={styles.toolBtnText}>Team</Text>
+            <Text style={styles.toolBtnText}>[ team ]</Text>
           </Pressable>
           {canEdit && (
             <Pressable
               style={[styles.toolBtn, styles.toolBtnPrimary]}
               onPress={() => setAddColumnOpen(true)}
             >
-              <Text style={[styles.toolBtnText, { color: '#fff' }]}>+ Column</Text>
+              <Text style={[styles.toolBtnText, { color: '#fff' }]}>[ + column ]</Text>
             </Pressable>
           )}
         </View>
@@ -317,7 +317,9 @@ export default function BoardScreen() {
                       : undefined
                   }
                 >
-                  <Text style={styles.columnTitle}>{col.column.name}</Text>
+                  <Text style={styles.columnTitle} numberOfLines={1}>
+                    {`┌─ ${col.column.name.toUpperCase()}`}
+                  </Text>
                 </Pressable>
               )}
               <Text style={styles.count}>{col.cards.length}</Text>
@@ -395,7 +397,7 @@ export default function BoardScreen() {
                   style={styles.addCard}
                   onPress={() => setQuickAddCol(col.column.id)}
                 >
-                  <Text style={styles.addCardText}>+ Add task</Text>
+                  <Text style={styles.addCardText}>[ + add task ]</Text>
                 </Pressable>
               ))}
           </View>
@@ -404,7 +406,7 @@ export default function BoardScreen() {
         {canEdit && (
           <View style={[styles.column, styles.addColumnCol]}>
             <Pressable onPress={() => setAddColumnOpen(true)}>
-              <Text style={styles.addCardText}>+ Add column</Text>
+              <Text style={styles.addCardText}>[ + column ]</Text>
             </Pressable>
           </View>
         )}
@@ -430,10 +432,10 @@ export default function BoardScreen() {
                 onPress={() => setAddColumnOpen(false)}
                 style={styles.btnGhost}
               >
-                <Text style={styles.btnGhostText}>Cancel</Text>
+                <Text style={styles.btnGhostText}>[ cancel ]</Text>
               </Pressable>
               <Pressable onPress={createColumn} style={styles.btnPrimary}>
-                <Text style={styles.btnPrimaryText}>Create</Text>
+                <Text style={styles.btnPrimaryText}>[ create ]</Text>
               </Pressable>
             </View>
           </View>
@@ -466,17 +468,21 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     gap: spacing.md,
   },
   errorText: {
-    color: colors.textSecondary,
+    fontFamily: font.mono,
+    color: colors.danger,
     paddingHorizontal: spacing.lg,
     textAlign: 'center',
+    fontSize: 13,
   },
   retryBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.bg,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
-    borderRadius: radius.md,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
-  retryText: { color: '#fff', fontWeight: '700' },
+  retryText: { fontFamily: font.mono, color: colors.primary, fontWeight: '700' },
   toolbar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -484,33 +490,45 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     padding: spacing.md,
     backgroundColor: colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.line,
     gap: spacing.sm,
     flexWrap: 'wrap',
   },
-  boardName: { fontSize: 20, fontWeight: '800', color: colors.text },
+  boardName: {
+    fontFamily: font.mono,
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.text,
+    textTransform: 'uppercase',
+  },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginTop: 2,
   },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  status: { fontSize: 12, color: colors.textSecondary },
-  toolbarActions: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  dot: { width: 8, height: 8, borderRadius: 0 },
+  status: { fontFamily: font.mono, fontSize: 11, color: colors.textSecondary },
+  toolbarActions: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
   toolBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: radius.md,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    borderRadius: 0,
     backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
   },
   toolBtnPrimary: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  toolBtnText: { fontSize: 12, fontWeight: '700', color: colors.text },
+  toolBtnText: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.text,
+    letterSpacing: 1,
+  },
   columnsRow: {
     padding: spacing.md,
     gap: spacing.md,
@@ -519,14 +537,16 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   },
   column: {
     width: 270,
-    backgroundColor: colors.border + '66',
-    borderRadius: radius.lg,
+    backgroundColor: colors.card,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.line,
     padding: spacing.sm,
     minHeight: 200,
   },
   columnDropTarget: {
-    borderWidth: 1,
-    borderColor: colors.primary + '44',
+    borderColor: colors.primary,
+    backgroundColor: colors.selection,
   },
   columnHeader: {
     flexDirection: 'row',
@@ -534,15 +554,25 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     alignItems: 'center',
     paddingHorizontal: spacing.xs,
     paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    marginBottom: spacing.sm,
   },
-  columnTitle: { fontWeight: '800', color: colors.text, fontSize: 14 },
+  columnTitle: {
+    fontFamily: font.mono,
+    fontWeight: '700',
+    color: colors.text,
+    fontSize: 12,
+    flexShrink: 1,
+  },
   colRenameInput: {
     flex: 1,
-    fontWeight: '800',
+    fontFamily: font.mono,
+    fontWeight: '700',
     color: colors.text,
-    fontSize: 14,
-    backgroundColor: colors.card,
-    borderRadius: radius.sm,
+    fontSize: 12,
+    backgroundColor: colors.bg,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: colors.primary,
     paddingHorizontal: spacing.xs,
@@ -553,32 +583,33 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     paddingVertical: 2,
   },
   colActionText: {
-    fontSize: 14,
+    fontFamily: font.mono,
+    fontSize: 13,
     fontWeight: '700',
     color: colors.textSecondary,
   },
   count: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    backgroundColor: colors.card,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radius.full,
-    overflow: 'hidden',
+    fontFamily: font.mono,
+    fontSize: 11,
+    color: colors.textMuted,
+    marginLeft: spacing.xs,
   },
   addCard: { padding: spacing.sm, alignItems: 'center' },
   addCardText: {
-    color: colors.textSecondary,
-    fontWeight: '600',
-    fontSize: 13,
+    fontFamily: font.mono,
+    color: colors.textMuted,
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 1,
   },
   quickAdd: { padding: spacing.xs },
   quickInput: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
+    backgroundColor: colors.bg,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: colors.primary,
     padding: spacing.sm,
+    fontFamily: font.mono,
     fontSize: 14,
     color: colors.text,
   },
@@ -586,7 +617,7 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: colors.border,
+    borderColor: colors.line,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 120,
@@ -600,25 +631,31 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   },
   modalCard: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.primary,
     padding: spacing.lg,
     maxWidth: 400,
     width: '100%',
     alignSelf: 'center',
   },
   modalTitle: {
-    fontSize: 18,
+    fontFamily: font.mono,
+    fontSize: 14,
     fontWeight: '800',
     color: colors.text,
     marginBottom: spacing.md,
+    textTransform: 'uppercase',
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: colors.line,
+    borderRadius: 0,
     padding: spacing.md,
-    fontSize: 15,
+    fontFamily: font.mono,
+    fontSize: 14,
     color: colors.text,
+    backgroundColor: colors.bg,
     marginBottom: spacing.sm,
   },
   modalActions: {
@@ -627,14 +664,14 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     gap: spacing.sm,
     marginTop: spacing.sm,
   },
-  btnGhost: { padding: 12, borderRadius: radius.md },
-  btnGhostText: { color: colors.textSecondary, fontWeight: '600' },
+  btnGhost: { padding: 12, borderRadius: 0 },
+  btnGhostText: { fontFamily: font.mono, color: colors.textSecondary, fontWeight: '700', fontSize: 13 },
   btnPrimary: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
     padding: 12,
-    borderRadius: radius.md,
+    borderRadius: 0,
   },
-  btnPrimaryText: { color: '#fff', fontWeight: '700' },
+  btnPrimaryText: { fontFamily: font.mono, color: '#fff', fontWeight: '700' },
 });
 }
