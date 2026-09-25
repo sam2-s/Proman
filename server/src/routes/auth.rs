@@ -135,3 +135,137 @@ pub async fn me(
         "created_at": row.get::<String, _>("created_at"),
     })))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::{AppState, SharedState};
+    use std::sync::Arc;
+
+    async fn test_state() -> SharedState {
+        let pool = sqlx::sqlite::SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .expect("memory db");
+        crate::db::run_migrations(&pool).await.expect("migrations");
+        let dir = std::env::temp_dir().join(format!("proman-auth-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).expect("upload dir");
+        let (broadcast, _) = tokio::sync::broadcast::channel(16);
+        Arc::new(AppState {
+            db: pool,
+            upload_dir: dir,
+            broadcast,
+        })
+    }
+
+    fn register_req(username: &str) -> Json<RegisterReq> {
+        Json(RegisterReq {
+            username: username.into(),
+            password: "password123".into(),
+            name: "Test User".into(),
+        })
+    }
+
+    #[test]
+    fn normalize_username_lowercases_and_accepts_valid() {
+        assert_eq!(normalize_username("TUI-Tester").unwrap(), "tui-tester");
+        assert_eq!(normalize_username(" some_user ").unwrap(), "some_user");
+        assert_eq!(normalize_username("a1b2c3").unwrap(), "a1b2c3");
+    }
+
+    #[test]
+    fn normalize_username_rejects_bad_shapes() {
+        for bad in [
+            "ab",
+            "has space",
+            "-lead",
+            "plus+sign",
+            "dots.no",
+            "ünicode",
+        ] {
+            assert!(
+                normalize_username(bad).is_err(),
+                "expected {bad:?} to be rejected"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn register_login_me_flow_has_no_email() {
+        let state = test_state().await;
+
+        let (status, Json(resp)) = register(State(state.clone()), register_req("Flow-Tester"))
+            .await
+            .expect("register");
+        assert_eq!(status, axum::http::StatusCode::CREATED);
+        let v = serde_json::to_value(&resp).expect("serialize");
+        assert_eq!(v["user"]["username"], "flow-tester");
+        assert_eq!(v["user"]["is_admin"], false);
+        assert!(
+            v["user"].get("email").is_none(),
+            "email must never be returned"
+        );
+
+        match register(State(state.clone()), register_req("flow-tester")).await {
+            Err(ApiError::Conflict(_)) => {}
+            other => panic!("expected conflict, got {other:?}"),
+        }
+
+        let Json(auth) = login(
+            State(state.clone()),
+            Json(LoginReq {
+                username: "Flow-Tester".into(),
+                password: "password123".into(),
+            }),
+        )
+        .await
+        .expect("login");
+        assert_eq!(auth.user.username, "flow-tester");
+
+        let err = login(
+            State(state.clone()),
+            Json(LoginReq {
+                username: "flow-tester".into(),
+                password: "wrong-password".into(),
+            }),
+        )
+        .await;
+        assert!(matches!(err, Err(ApiError::Unauthorized(_))));
+
+        let Json(me) = me(State(state.clone()), AuthUser(auth.user.id))
+            .await
+            .expect("me");
+        assert_eq!(me["username"], "flow-tester");
+        assert!(me.get("email").is_none());
+    }
+
+    #[tokio::test]
+    async fn register_validates_inputs() {
+        let state = test_state().await;
+        let short = register(State(state.clone()), register_req("ab")).await;
+        assert!(matches!(short, Err(ApiError::BadRequest(_))));
+
+        let no_name = register(
+            State(state.clone()),
+            Json(RegisterReq {
+                username: "valid-user".into(),
+                password: "password123".into(),
+                name: "  ".into(),
+            }),
+        )
+        .await;
+        assert!(matches!(no_name, Err(ApiError::BadRequest(_))));
+
+        let weak_pw = register(
+            State(state.clone()),
+            Json(RegisterReq {
+                username: "valid-user".into(),
+                password: "short".into(),
+                name: "Valid".into(),
+            }),
+        )
+        .await;
+        assert!(matches!(weak_pw, Err(ApiError::BadRequest(_))));
+    }
+}
