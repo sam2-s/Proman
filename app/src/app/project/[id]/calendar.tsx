@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { api } from '../../../api/client';
 import type { Card } from '../../../api/types';
-import { radius, spacing } from '../../../theme';
+import { font, spacing } from '../../../theme';
 import { useTheme } from '../../../theme/Theme';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -91,7 +91,7 @@ export default function CalendarScreen() {
         >
           <Text style={styles.navBtnText}>‹</Text>
         </Pressable>
-        <Text style={styles.monthLabel}>{monthLabel}</Text>
+        <Text style={styles.monthLabel}>{monthLabel.toUpperCase()}</Text>
         <Pressable
           onPress={() =>
             setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
@@ -105,7 +105,7 @@ export default function CalendarScreen() {
       <View style={styles.grid}>
         {WEEKDAYS.map((w) => (
           <View key={w} style={styles.weekdayCell}>
-            <Text style={styles.weekdayText}>{w}</Text>
+            <Text style={styles.weekdayText}>{w.toUpperCase()}</Text>
           </View>
         ))}
         {days.map((d, i) => {
@@ -156,9 +156,9 @@ export default function CalendarScreen() {
 
       {selected && (
         <View style={styles.agenda}>
-          <Text style={styles.agendaTitle}>{selected}</Text>
+          <Text style={styles.agendaTitle}>{`── ${selected}`}</Text>
           {(byDate.get(selected) ?? []).length === 0 ? (
-            <Text style={styles.agendaEmpty}>No tasks due</Text>
+            <Text style={styles.agendaEmpty}>no tasks due</Text>
           ) : (
             (byDate.get(selected) ?? []).map((c) => (
               <View key={c.id} style={styles.agendaItem}>
@@ -205,65 +205,105 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
-  monthLabel: { fontSize: 18, fontWeight: '800', color: colors.text },
+  monthLabel: {
+    fontFamily: font.mono,
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+    letterSpacing: 2,
+  },
   navBtn: {
     width: 40,
     height: 40,
-    borderRadius: radius.md,
+    borderRadius: 0,
     backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  navBtnText: { fontSize: 22, color: colors.text, fontWeight: '600' },
+  navBtnText: {
+    fontFamily: font.mono,
+    fontSize: 20,
+    color: colors.primary,
+    fontWeight: '700',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
     overflow: 'hidden',
   },
   weekdayCell: {
     width: `${100 / 7}%`,
     alignItems: 'center',
     paddingVertical: 8,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.bg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
   },
-  weekdayText: { fontSize: 11, fontWeight: '800', color: colors.primary },
+  weekdayText: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.textSecondary,
+    letterSpacing: 1,
+  },
   cell: {
     width: `${100 / 7}%`,
     minHeight: 56,
     borderWidth: 0.5,
-    borderColor: colors.border,
+    borderColor: colors.line,
     padding: 4,
     alignItems: 'center',
   },
   today: { backgroundColor: colors.primary },
-  selectedDay: { backgroundColor: colors.primaryLight },
-  dayNum: { fontSize: 13, fontWeight: '600', color: colors.text },
+  selectedDay: { backgroundColor: colors.selection },
+  dayNum: { fontFamily: font.mono, fontSize: 13, fontWeight: '600', color: colors.text },
   dots: { flexDirection: 'row', gap: 3, marginTop: 4 },
-  dot: { width: 6, height: 6, borderRadius: 3 },
+  dot: { width: 6, height: 6, borderRadius: 0 },
   agenda: {
     marginTop: spacing.md,
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
     padding: spacing.md,
   },
-  agendaTitle: { fontWeight: '800', color: colors.text, fontSize: 15 },
-  agendaEmpty: { color: colors.textMuted, marginTop: spacing.sm },
+  agendaTitle: {
+    fontFamily: font.mono,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    fontSize: 13,
+    letterSpacing: 1,
+  },
+  agendaEmpty: {
+    fontFamily: font.mono,
+    color: colors.textMuted,
+    marginTop: spacing.sm,
+    fontSize: 12,
+  },
   agendaItem: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginTop: spacing.sm,
     alignItems: 'stretch',
   },
-  priorityStripe: { width: 4, borderRadius: 2 },
-  agendaTask: { fontWeight: '700', color: colors.text, fontSize: 14 },
-  agendaDesc: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+  priorityStripe: { width: 4, borderRadius: 0 },
+  agendaTask: {
+    fontFamily: font.mono,
+    fontWeight: '700',
+    color: colors.text,
+    fontSize: 13,
+  },
+  agendaDesc: {
+    fontFamily: font.mono,
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
 });
 }
