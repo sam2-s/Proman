@@ -65,7 +65,15 @@ export default function SearchScreen() {
     },
     title: { fontWeight: '700', color: colors.text, fontSize: 15 },
     meta: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
-    empty: { color: colors.textMuted, textAlign: 'center', marginTop: 40 },
+    emptyBox: { alignItems: 'center', marginTop: 48, paddingHorizontal: spacing.lg },
+    emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+    emptyHint: {
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: spacing.sm,
+      fontSize: 13,
+      lineHeight: 19,
+    },
     center: {
       flex: 1,
       alignItems: 'center',
@@ -97,7 +105,23 @@ export default function SearchScreen() {
         data={results}
         keyExtractor={(item) => String(item.id)}
         ListEmptyComponent={
-          q ? <Text style={styles.empty}>No matching tasks</Text> : null
+          q.trim() ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyTitle}>No matching tasks</Text>
+              <Text style={styles.emptyHint}>
+                Try a different keyword — search covers task titles and
+                descriptions across your projects.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyTitle}>Search tasks</Text>
+              <Text style={styles.emptyHint}>
+                Start typing to find tasks by title or description across all
+                of your projects.
+              </Text>
+            </View>
+          )
         }
         renderItem={({ item }) => (
           <Pressable

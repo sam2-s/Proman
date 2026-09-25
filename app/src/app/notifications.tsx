@@ -109,7 +109,15 @@ export default function NotificationsScreen() {
     rowUnread: { borderColor: colors.primary + '55' },
     body: { color: colors.text, fontSize: 14, fontWeight: '600' },
     time: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
-    empty: { color: colors.textMuted, textAlign: 'center', marginTop: 40 },
+    emptyBox: { alignItems: 'center', marginTop: 48, paddingHorizontal: spacing.lg },
+    emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+    emptyHint: {
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: spacing.sm,
+      fontSize: 13,
+      lineHeight: 19,
+    },
     loadMore: {
       margin: spacing.md,
       padding: spacing.md,
@@ -147,7 +155,14 @@ export default function NotificationsScreen() {
       <FlatList
         data={items}
         keyExtractor={(n) => String(n.id)}
-        ListEmptyComponent={<Text style={styles.empty}>You’re all caught up</Text>}
+        ListEmptyComponent={
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyTitle}>You’re all caught up</Text>
+            <Text style={styles.emptyHint}>
+              New comments, assignments, and mentions will show up here.
+            </Text>
+          </View>
+        }
         ListFooterComponent={
           hasMore ? (
             <Pressable style={styles.loadMore} onPress={() => void loadMore()}>

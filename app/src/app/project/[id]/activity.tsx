@@ -75,7 +75,15 @@ export default function ActivityScreen() {
     },
     summary: { color: colors.text, fontSize: 14, fontWeight: '600' },
     meta: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
-    empty: { color: colors.textMuted, textAlign: 'center', marginTop: 40 },
+    emptyBox: { alignItems: 'center', marginTop: 48, paddingHorizontal: spacing.lg },
+    emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+    emptyHint: {
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: spacing.sm,
+      fontSize: 13,
+      lineHeight: 19,
+    },
     loadMore: {
       margin: spacing.md,
       padding: spacing.md,
@@ -103,7 +111,13 @@ export default function ActivityScreen() {
         keyExtractor={(a) => String(a.id)}
         contentContainerStyle={{ paddingBottom: spacing.lg }}
         ListEmptyComponent={
-          <Text style={styles.empty}>No activity yet</Text>
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyTitle}>No activity yet</Text>
+            <Text style={styles.emptyHint}>
+              Task moves, comments, and edits will appear here as your team
+              works.
+            </Text>
+          </View>
         }
         ListFooterComponent={
           hasMore ? (
