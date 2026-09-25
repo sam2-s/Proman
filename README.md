@@ -14,7 +14,7 @@
 | Frontend | Expo (React Native + react-native-web) |
 | Backend  | Rust · Axum · Tokio                 |
 | Database | SQLite (via sqlx)                   |
-| Auth     | JWT (register / login)              |
+| Auth     | JWT (username register / login)     |
 | Realtime | WebSockets                          |
 | Files    | Local disk uploads                  |
 
@@ -25,11 +25,14 @@
 - **Timeline / Gantt** — schedule view with task bars over time
 - **Calendar view** — tasks and deadlines on a monthly calendar
 - **Team collaboration** — projects, members, roles, comments
+- **Roles & admin** — `owner`/`admin`/`editor`/`viewer` (viewers read-only), global admin console
+- **Username accounts** — no email anywhere; usernames for login and invites
+- **Avatars** — upload a picture, initials fallback
 - **File attachments** — upload and download files on tasks (incl. mobile document picker)
 - **Live updates** — board changes sync in real time over WebSockets
 - **Search** — find tasks across your projects
 - **Activity & notifications** — project feed + in-app bell with unread badge
-- **Dark mode** — follows system appearance
+- **Themes** — dark terminal (default), light paper, or system; persisted
 - **Cross-platform** — one app runs in the browser and on phones
 - **Android APK** — EAS preview profile builds an installable APK
 
@@ -62,7 +65,7 @@ Optional — seed a demo account:
 
 ```bash
 ./scripts/seed.sh
-# login: demo@proman.dev / password123
+# login: demo / password123
 ```
 
 ### 2. Frontend
@@ -101,7 +104,11 @@ make check    # cargo check + tsc
 | GET    | `/api/projects`               | List my projects         |
 | POST   | `/api/projects`               | Create a project         |
 | GET    | `/api/projects/:id`           | Project detail + members |
-| POST   | `/api/projects/:id/members`   | Add a member             |
+| POST   | `/api/projects/:id/members`   | Invite member by username |
+| PATCH  | `/api/projects/:id/members/:user_id` | Change a member role |
+| DELETE | `/api/projects/:id/members/:user_id` | Remove a member       |
+| POST   | `/api/me/avatar`              | Upload own avatar        |
+| GET    | `/api/avatars/:id`            | Public avatar image      |
 | GET    | `/api/boards/:id`             | Board with columns/cards |
 | POST   | `/api/projects/:id/boards`    | Create a board           |
 | POST   | `/api/boards/:id/columns`     | Create a column          |
@@ -118,6 +125,9 @@ make check    # cargo check + tsc
 | GET    | `/api/projects/:id/activity`  | Project activity feed    |
 | GET    | `/api/notifications`          | My notifications (paged) |
 | GET    | `/api/notifications/unread-count` | Unread badge count    |
+| GET    | `/api/admin/users`            | List users (admins)      |
+| PATCH  | `/api/admin/users/:id`        | Grant/revoke admin       |
+| DELETE | `/api/admin/users/:id`        | Delete a user            |
 | WS     | `/ws?project_id=`             | Realtime board events    |
 
 ## Android APK

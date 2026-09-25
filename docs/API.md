@@ -10,25 +10,37 @@ Authorization: Bearer <jwt>
 
 ## Auth
 
+Username-only accounts: no email is ever required, stored in API
+responses, or shown in the UI. Usernames are 3–32 chars of
+`a-z 0-9 _ -` (case-insensitive, unique).
+
 ### POST /api/auth/register
 
 ```json
-{ "email": "a@b.com", "password": "secret123", "name": "Ada" }
+{ "username": "ada", "password": "secret123", "name": "Ada" }
 ```
 
-→ `201` `{ "token": "...", "user": { "id": 1, "email": "...", "name": "..." } }`
+→ `201` `{ "token": "...", "user": { "id": 1, "username": "ada", "name": "Ada", "avatar_url": null, "is_admin": false, "created_at": "..." } }`
 
 ### POST /api/auth/login
 
 ```json
-{ "email": "a@b.com", "password": "secret123" }
+{ "username": "ada", "password": "secret123" }
 ```
 
 → `200` `{ "token": "...", "user": { ... } }`
 
 ### GET /api/me
 
-→ `200` `{ "id": 1, "email": "...", "name": "..." }`
+→ `200` `{ "id": 1, "username": "ada", "name": "Ada", "avatar_url": null, "is_admin": false, ... }`
+
+### POST /api/me/avatar  (multipart/form-data, field `avatar`)
+
+Upload own avatar (png/jpg/webp/gif, ≤ 5 MB) → `200` `{ "avatar_url": "/api/avatars/1" }`
+
+### GET /api/avatars/:id
+
+Public avatar image bytes (cached).
 
 ## Projects
 
@@ -45,10 +57,27 @@ Project + members + boards summary.
 
 ### POST /api/projects/:id/members
 ```json
-{ "email": "teammate@x.com", "role": "editor" }
+{ "username": "teammate", "role": "editor" }
 ```
 
-Roles: `owner` | `editor` | `viewer`
+### PATCH /api/projects/:id/members/:user_id
+```json
+{ "role": "viewer" }
+```
+
+### DELETE /api/projects/:id/members/:user_id
+
+Roles: `owner` | `admin` | `editor` | `viewer`
+
+| Role   | Allows                                                        |
+|--------|---------------------------------------------------------------|
+| owner  | all, plus delete project (cannot be demoted/removed)          |
+| admin  | member invite/role/remove + all editor powers                 |
+| editor | create/update/delete content                                  |
+| viewer | read-only (no mutations, no drag-and-drop, no comments)       |
+
+Global admins (`users.is_admin`) pass every check with ≥ `admin`
+power on all projects without needing membership.
 
 ## Boards
 
@@ -112,6 +141,17 @@ Partial update; also used for moving:
 
 ### POST /api/cards/:id/attachments  (multipart/form-data, field `file`)
 ### GET /api/attachments/:id  → file bytes
+
+## Admin (global admins only)
+
+### GET /api/admin/users
+All users with `username`, `name`, `is_admin`, `created_at`, `projects` count.
+
+### PATCH /api/admin/users/:id  `{ "is_admin": true }`
+Grant/revoke global admin (not on yourself).
+
+### DELETE /api/admin/users/:id
+Delete a user and their data (not yourself).
 
 ## Search
 

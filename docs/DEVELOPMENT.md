@@ -79,7 +79,7 @@ curl http://127.0.0.1:3000/api/health
 # register
 curl -X POST http://127.0.0.1:3000/api/auth/register \
   -H 'Content-Type: application/json' \
-  -d '{"email":"you@example.com","password":"password123","name":"You"}'
+  -d '{"username":"you","password":"password123","name":"You"}'
 ```
 
 ## Project layout

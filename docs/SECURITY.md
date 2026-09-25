@@ -14,7 +14,13 @@ repository rather than opening a public issue.
 - CORS defaults to open origin in development — restrict before deploying
 - File uploads capped at **20 MB**; stored outside the web root under `uploads/`
 - WebSocket connections require a valid JWT at upgrade time
-- Project routes check **membership** (owner/editor/viewer) on every request
+- Project routes check **role** on every request
+  (`owner`/`admin`/`editor`/`viewer`; viewers are strictly read-only)
+- Global admin flag (`users.is_admin`) elevates to admin power everywhere;
+  admins cannot self-revoke, self-delete, or strip the project owner
+- Accounts are **username-only** — no email is collected, returned, or rendered
+- Avatar uploads: multipart, 5 MB cap, content-type allowlist, stored as
+  `avatar_<id>.<ext>` outside the web root
 - Search and activity endpoints filter by project membership
 
 ## Before production

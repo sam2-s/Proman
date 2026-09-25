@@ -4,7 +4,8 @@ SQLite schema (created automatically by `server/src/db.rs`).
 
 ```
 users
-  id, email (unique), password_hash, name, created_at
+  id, username (unique), email (legacy — never returned), avatar_url,
+  is_admin, password_hash, name, created_at
 
 projects
   id, name, description, owner_id → users.id, created_at
@@ -47,9 +48,13 @@ notifications
 
 | Role   | Can…                                        |
 |--------|---------------------------------------------|
-| owner  | everything + delete project, manage members |
-| editor | create/edit cards, columns, comments, files |
-| viewer | read-only                                   |
+| owner  | everything + delete project, cannot be demoted |
+| admin  | member invite/role/remove + editor powers      |
+| editor | create/edit cards, columns, comments, files    |
+| viewer | read-only                                     |
+
+`users.is_admin` marks a **global admin**: admin power on every project
+without membership (never owner powers).
 
 ## Priorities
 
