@@ -1,4 +1,4 @@
-.PHONY: help server app web typecheck check fmt clean apk prebuild test smoke
+.PHONY: help server app web typecheck lint check fmt clean apk prebuild test smoke
 
 help:
 	@echo "Proman make targets:"
@@ -6,6 +6,7 @@ help:
 	@echo "  make app        - start Expo dev server"
 	@echo "  make web        - start Expo for web"
 	@echo "  make typecheck  - TypeScript check"
+	@echo "  make lint       - ESLint (Expo config)"
 	@echo "  make check      - cargo check + tsc"
 	@echo "  make test       - cargo test"
 	@echo "  make fmt        - cargo fmt"
@@ -25,6 +26,9 @@ web:
 
 typecheck:
 	cd app && npx tsc --noEmit
+
+lint:
+	cd app && npx eslint .
 
 check:
 	cd server && cargo check
