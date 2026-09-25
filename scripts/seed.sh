@@ -3,14 +3,14 @@
 set -euo pipefail
 
 BASE="${BASE:-http://127.0.0.1:3000}"
-EMAIL="${EMAIL:-demo@proman.dev}"
+USERNAME="${USERNAME:-demo}"
 PASS="${PASS:-password123}"
 
-echo "Seeding demo user $EMAIL …"
+echo "Seeding demo user @$USERNAME …"
 
 REG=$(curl -s -X POST "$BASE/api/auth/register" \
   -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\",\"name\":\"Demo User\"}")
+  -d "{\"username\":\"$USERNAME\",\"password\":\"$PASS\",\"name\":\"Demo User\"}")
 
 if echo "$REG" | grep -q token; then
   TOKEN=$(printf '%s' "$REG" | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
@@ -18,7 +18,7 @@ if echo "$REG" | grep -q token; then
 else
   LOGIN=$(curl -s -X POST "$BASE/api/auth/login" \
     -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}")
+    -d "{\"username\":\"$USERNAME\",\"password\":\"$PASS\"}")
   TOKEN=$(printf '%s' "$LOGIN" | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
   echo "logged in existing account"
 fi
@@ -48,4 +48,4 @@ create "$COL1" "Draft press kit" "medium" "2026-09-27" "2026-10-03"
 create "$COL2" "Build landing page" "urgent" "2026-09-24" "2026-10-01"
 create "$COL1" "Record demo video" "low" "2026-10-01" "2026-10-07"
 
-echo "Seeded. Login with $EMAIL / $PASS"
+echo "Seeded. Login with $USERNAME / $PASS"
