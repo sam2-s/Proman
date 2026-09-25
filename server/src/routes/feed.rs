@@ -14,6 +14,8 @@ use crate::state::SharedState;
 pub struct ActivityQuery {
     #[serde(default = "default_limit")]
     pub limit: i64,
+    #[serde(default)]
+    pub offset: i64,
 }
 
 fn default_limit() -> i64 {
@@ -28,35 +30,66 @@ pub async fn list_activity(
 ) -> ApiResult<Json<Vec<Activity>>> {
     ensure_member(&state, project_id, user_id).await?;
     let limit = q.limit.clamp(1, 200);
+    let offset = q.offset.max(0);
     let rows = sqlx::query_as::<_, Activity>(
         r#"SELECT a.id, a.project_id, a.user_id, a.card_id, a.verb, a.summary, a.created_at
            FROM activity a
            WHERE a.project_id = ?
            ORDER BY a.created_at DESC, a.id DESC
-           LIMIT ?"#,
+           LIMIT ? OFFSET ?"#,
     )
     .bind(project_id)
     .bind(limit)
+    .bind(offset)
     .fetch_all(&state.db)
     .await?;
     Ok(Json(rows))
 }
 
+#[derive(Debug, Deserialize)]
+pub struct NotificationQuery {
+    #[serde(default = "default_limit")]
+    pub limit: i64,
+    #[serde(default)]
+    pub offset: i64,
+    #[serde(default)]
+    pub unread: bool,
+}
+
 pub async fn list_notifications(
     State(state): State<SharedState>,
     AuthUser(user_id): AuthUser,
+    Query(q): Query<NotificationQuery>,
 ) -> ApiResult<Json<Vec<Notification>>> {
-    let rows = sqlx::query_as::<_, Notification>(
+    let limit = q.limit.clamp(1, 200);
+    let offset = q.offset.max(0);
+    let filter = if q.unread { "AND read = 0" } else { "" };
+    let sql = format!(
         r#"SELECT id, user_id, project_id, card_id, body, read, created_at
            FROM notifications
-           WHERE user_id = ?
+           WHERE user_id = ? {filter}
            ORDER BY created_at DESC, id DESC
-           LIMIT 50"#,
-    )
-    .bind(user_id)
-    .fetch_all(&state.db)
-    .await?;
+           LIMIT ? OFFSET ?"#
+    );
+    let rows = sqlx::query_as::<_, Notification>(&sql)
+        .bind(user_id)
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&state.db)
+        .await?;
     Ok(Json(rows))
+}
+
+pub async fn unread_notification_count(
+    State(state): State<SharedState>,
+    AuthUser(user_id): AuthUser,
+) -> ApiResult<Json<serde_json::Value>> {
+    let row: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND read = 0")
+            .bind(user_id)
+            .fetch_one(&state.db)
+            .await?;
+    Ok(Json(serde_json::json!({ "count": row.0 })))
 }
 
 pub async fn mark_notification_read(

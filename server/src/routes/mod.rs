@@ -20,6 +20,10 @@ pub fn router(state: SharedState) -> Router {
         .route("/api/search", get(feed::search_cards))
         .route("/api/notifications", get(feed::list_notifications))
         .route(
+            "/api/notifications/unread-count",
+            get(feed::unread_notification_count),
+        )
+        .route(
             "/api/notifications/read-all",
             post(feed::mark_all_notifications_read),
         )
