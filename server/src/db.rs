@@ -25,8 +25,11 @@ async fn run_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+            username TEXT NOT NULL DEFAULT '',
             password_hash TEXT NOT NULL,
             name TEXT NOT NULL,
+            avatar_url TEXT,
+            is_admin INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -133,6 +136,72 @@ async fn run_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
     .execute(pool)
     .await?;
 
+    migrate_users_table(pool).await?;
+
     tracing::info!("database ready");
+    Ok(())
+}
+
+/// Idempotent upgrades for databases created before these columns existed,
+/// plus backfilling usernames for pre-existing email-only accounts.
+async fn migrate_users_table(pool: &SqlitePool) -> anyhow::Result<()> {
+    add_column_if_missing(pool, "users", "username", "TEXT NOT NULL DEFAULT ''").await?;
+    add_column_if_missing(pool, "users", "avatar_url", "TEXT").await?;
+    add_column_if_missing(pool, "users", "is_admin", "INTEGER NOT NULL DEFAULT 0").await?;
+
+    // username = email local-part (legacy accounts), with a unique suffix on collision.
+    sqlx::query(
+        r#"UPDATE users
+           SET username = CASE
+             WHEN instr(email, '@') > 0 THEN lower(substr(email, 1, instr(email, '@') - 1))
+             ELSE lower(email)
+           END
+           WHERE username = ''"#,
+    )
+    .execute(pool)
+    .await?;
+    sqlx::query(
+        r#"UPDATE users
+           SET username = username || '_' || id
+           WHERE id IN (
+             SELECT u1.id FROM users u1
+             WHERE EXISTS (
+               SELECT 1 FROM users u2
+               WHERE u2.username = u1.username AND u2.id < u1.id
+             )
+           )"#,
+    )
+    .execute(pool)
+    .await?;
+    sqlx::query("UPDATE users SET username = 'user_' || id WHERE username = ''")
+        .execute(pool)
+        .await?;
+
+    sqlx::query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)")
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+async fn add_column_if_missing(
+    pool: &SqlitePool,
+    table: &str,
+    column: &str,
+    definition: &str,
+) -> anyhow::Result<()> {
+    let existing: Option<(String,)> =
+        sqlx::query_as("SELECT name FROM pragma_table_info(?) WHERE name = ?")
+            .bind(table)
+            .bind(column)
+            .fetch_optional(pool)
+            .await?;
+    if existing.is_none() {
+        sqlx::query(&format!(
+            "ALTER TABLE {table} ADD COLUMN {column} {definition}"
+        ))
+        .execute(pool)
+        .await?;
+        tracing::info!("migrated: added {table}.{column}");
+    }
     Ok(())
 }
