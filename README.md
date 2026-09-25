@@ -28,7 +28,7 @@
 - **File attachments** — upload and download files on tasks (incl. mobile document picker)
 - **Live updates** — board changes sync in real time over WebSockets
 - **Search** — find tasks across your projects
-- **Activity & notifications** — project feed + in-app bell
+- **Activity & notifications** — project feed + in-app bell with unread badge
 - **Dark mode** — follows system appearance
 - **Cross-platform** — one app runs in the browser and on phones
 - **Android APK** — EAS preview profile builds an installable APK
@@ -116,7 +116,8 @@ make check    # cargo check + tsc
 | GET    | `/api/attachments/:id`        | Download a file          |
 | GET    | `/api/search?q=`              | Search cards             |
 | GET    | `/api/projects/:id/activity`  | Project activity feed    |
-| GET    | `/api/notifications`          | My notifications         |
+| GET    | `/api/notifications`          | My notifications (paged) |
+| GET    | `/api/notifications/unread-count` | Unread badge count    |
 | WS     | `/ws?project_id=`             | Realtime board events    |
 
 ## Android APK

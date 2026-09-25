@@ -17,6 +17,13 @@ All notable changes to Proman are documented here.
 - Local Gradle `make apk` target and `expo prebuild`
 - SQLite foreign keys enabled for cascade deletes
 - Server unit tests for auth JWT/password and priority validation
+- Pagination (`limit`/`offset`) for activity and notifications,
+  plus `GET /api/notifications/unread-count`
+- Unread badge on the bell; "Load more" on notifications and activity
+- Friendlier empty states for search, notifications, and activity
+- ESLint (eslint-config-expo) with a clean lint run
+- CI: lint step, concurrency cancellation, and job timeouts
+- Server unit tests for API error responses and WebSocket event routing
 
 ## [0.1.0] — 2026-09-24
 

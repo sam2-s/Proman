@@ -136,17 +136,22 @@ Cards (title/description) across projects the caller belongs to.
 
 ## Activity
 
-### GET /api/projects/:id/activity?limit=50
+### GET /api/projects/:id/activity?limit=50&offset=0
 
 Recent project activity (`verb`, `summary`, `created_at`).
+`limit` is clamped to 1–200; `offset` defaults to 0.
 
 ## Notifications
 
-### GET /api/notifications
+### GET /api/notifications?limit=50&offset=0&unread=true
+### GET /api/notifications/unread-count
 ### POST /api/notifications/:id/read
 ### POST /api/notifications/read-all
 
 In-app notifications (comments, assignments). Unread count is `read == 0`.
+`limit` is clamped to 1–200, `offset` defaults to 0, and `unread=true`
+returns only unread rows. `unread-count` returns `{ "count": n }` for the
+header badge.
 
 ## Realtime
 
