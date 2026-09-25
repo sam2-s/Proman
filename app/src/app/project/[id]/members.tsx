@@ -10,8 +10,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { api } from '../../../api/client';
+import { api, avatarSrc } from '../../../api/client';
 import type { Member, ProjectDetail } from '../../../api/types';
+import { Avatar } from '../../../components/Avatar';
 import { radius, spacing } from '../../../theme';
 import { useTheme } from '../../../theme/Theme';
 
@@ -108,12 +109,13 @@ export default function MembersScreen() {
 function MemberRow({ member }: { member: Member }) {
   const colors = useTheme();
   const styles = makeStyles(colors);
-  const initial = member.name.slice(0, 1).toUpperCase();
   return (
     <View style={styles.row}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{initial}</Text>
-      </View>
+      <Avatar
+        name={member.name}
+        uri={avatarSrc(member.avatar_url)}
+        size={40}
+      />
       <View style={{ flex: 1 }}>
         <Text style={styles.name}>{member.name}</Text>
         <Text style={styles.handle}>@{member.username}</Text>
@@ -187,15 +189,6 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     borderColor: colors.border,
     padding: spacing.md,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { color: colors.primary, fontWeight: '800', fontSize: 16 },
   name: { fontWeight: '700', color: colors.text, fontSize: 15 },
   handle: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
   role: {

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { api } from '../api/client';
 import type { Board, Project } from '../api/types';
+import { Avatar } from '../components/Avatar';
 import { useAuth } from '../context/auth';
 import { useTheme } from '../theme/Theme';
 import { radius, shadow, spacing } from '../theme';
@@ -148,15 +149,6 @@ export default function Projects() {
       ...shadow.card,
     },
     projectRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-    avatar: {
-      width: 44,
-      height: 44,
-      borderRadius: radius.md,
-      backgroundColor: colors.primaryLight,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    avatarText: { color: colors.primary, fontWeight: '800', fontSize: 18 },
     projectName: { fontSize: 16, fontWeight: '700', color: colors.text },
     projectDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
     roleBadge: {
@@ -299,11 +291,7 @@ export default function Projects() {
             onPress={() => openProject(item)}
           >
             <View style={styles.projectRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {item.name.slice(0, 1).toUpperCase()}
-                </Text>
-              </View>
+              <Avatar name={item.name} size={44} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.projectName}>{item.name}</Text>
                 <Text style={styles.projectDesc} numberOfLines={1}>

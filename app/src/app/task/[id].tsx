@@ -14,7 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { api, API_URL, getToken } from '../../api/client';
+import { api, API_URL, avatarSrc, getToken } from '../../api/client';
 import type {
   Attachment,
   BoardMember,
@@ -25,6 +25,7 @@ import type {
 } from '../../api/types';
 import { radius, spacing } from '../../theme';
 import { useTheme } from '../../theme/Theme';
+import { Avatar } from '../../components/Avatar';
 
 export default function TaskScreen() {
   const colors = useTheme();
@@ -306,11 +307,11 @@ export default function TaskScreen() {
                   },
                 ]}
               >
-                <View style={styles.miniAvatar}>
-                  <Text style={styles.miniAvatarText}>
-                    {m.name.slice(0, 1).toUpperCase()}
-                  </Text>
-                </View>
+                <Avatar
+                  name={m.name}
+                  uri={avatarSrc(m.avatar_url)}
+                  size={20}
+                />
                 <Text
                   style={[
                     styles.chipText,
@@ -495,15 +496,6 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     gap: 6,
     paddingRight: 12,
   },
-  miniAvatar: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  miniAvatarText: { fontSize: 10, fontWeight: '800', color: colors.primary },
   dateInput: {
     backgroundColor: colors.card,
     borderWidth: 1,
