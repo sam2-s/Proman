@@ -22,6 +22,7 @@ function RootStack() {
         name="projects"
         options={{ title: 'Projects', headerShown: false }}
       />
+      <Stack.Screen name="profile" options={{ title: 'Profile' }} />
       <Stack.Screen name="board/[id]" options={{ title: 'Board' }} />
       <Stack.Screen
         name="project/[id]/timeline"

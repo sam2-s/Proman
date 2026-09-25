@@ -263,6 +263,14 @@ export default function Projects() {
               </View>
             )}
           </Pressable>
+          <Pressable
+            style={styles.iconBtn}
+            onPress={() => router.push('/profile')}
+          >
+            <Text style={styles.iconBtnText}>
+              {user ? `@${user.username}` : 'Profile'}
+            </Text>
+          </Pressable>
           <Pressable onPress={() => logout()} style={styles.logoutBtn}>
             <Text style={styles.logoutText}>Log out</Text>
           </Pressable>
