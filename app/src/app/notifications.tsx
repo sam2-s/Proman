@@ -12,7 +12,7 @@ import {
 import { api } from '../api/client';
 import type { NotificationItem } from '../api/types';
 import { useTheme } from '../theme/Theme';
-import { radius, spacing } from '../theme';
+import { font, spacing } from '../theme';
 
 export default function NotificationsScreen() {
   const colors = useTheme();
@@ -92,46 +92,85 @@ export default function NotificationsScreen() {
       alignItems: 'center',
       padding: spacing.md,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: colors.line,
       backgroundColor: colors.card,
     },
-    headerText: { fontWeight: '800', color: colors.text },
-    markAll: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+    headerText: {
+      fontFamily: font.mono,
+      fontWeight: '700',
+      color: colors.text,
+      fontSize: 13,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    markAll: {
+      fontFamily: font.mono,
+      color: colors.primary,
+      fontWeight: '700',
+      fontSize: 12,
+      letterSpacing: 1,
+    },
     row: {
       marginHorizontal: spacing.md,
       marginTop: spacing.sm,
       padding: spacing.md,
       backgroundColor: colors.card,
-      borderRadius: radius.md,
+      borderRadius: 0,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.line,
     },
-    rowUnread: { borderColor: colors.primary + '55' },
-    body: { color: colors.text, fontSize: 14, fontWeight: '600' },
-    time: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
+    rowUnread: { borderColor: colors.primary },
+    body: {
+      fontFamily: font.mono,
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    time: {
+      fontFamily: font.mono,
+      color: colors.textMuted,
+      fontSize: 10,
+      marginTop: 6,
+      letterSpacing: 1,
+    },
     emptyBox: { alignItems: 'center', marginTop: 48, paddingHorizontal: spacing.lg },
-    emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-    emptyHint: {
+    emptyTitle: {
+      fontFamily: font.mono,
+      fontSize: 14,
+      fontWeight: '700',
       color: colors.textSecondary,
+      textTransform: 'uppercase',
+    },
+    emptyHint: {
+      fontFamily: font.mono,
+      color: colors.textMuted,
       textAlign: 'center',
       marginTop: spacing.sm,
-      fontSize: 13,
-      lineHeight: 19,
+      fontSize: 11,
+      lineHeight: 17,
     },
     loadMore: {
       margin: spacing.md,
       padding: spacing.md,
-      borderRadius: radius.md,
+      borderRadius: 0,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.line,
       backgroundColor: colors.card,
       alignItems: 'center',
     },
-    loadMoreText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+    loadMoreText: {
+      fontFamily: font.mono,
+      color: colors.primary,
+      fontWeight: '700',
+      fontSize: 13,
+      letterSpacing: 1,
+    },
     allLoaded: {
+      fontFamily: font.mono,
       color: colors.textMuted,
       textAlign: 'center',
-      fontSize: 12,
+      fontSize: 11,
+      letterSpacing: 2,
       marginVertical: spacing.md,
     },
   });
@@ -147,9 +186,9 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Notifications</Text>
+        <Text style={styles.headerText}>── notifications</Text>
         <Pressable onPress={markAll}>
-          <Text style={styles.markAll}>Mark all read</Text>
+          <Text style={styles.markAll}>[ mark all read ]</Text>
         </Pressable>
       </View>
       <FlatList
@@ -157,9 +196,9 @@ export default function NotificationsScreen() {
         keyExtractor={(n) => String(n.id)}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyTitle}>You’re all caught up</Text>
+            <Text style={styles.emptyTitle}>you&apos;re all caught up</Text>
             <Text style={styles.emptyHint}>
-              New comments, assignments, and mentions will show up here.
+              new comments, assignments and mentions land here
             </Text>
           </View>
         }
@@ -167,11 +206,11 @@ export default function NotificationsScreen() {
           hasMore ? (
             <Pressable style={styles.loadMore} onPress={() => void loadMore()}>
               <Text style={styles.loadMoreText}>
-                {loadingMore ? 'Loading…' : 'Load more'}
+                {loadingMore ? '[ ... ]' : '[ load more ]'}
               </Text>
             </Pressable>
           ) : items.length > 0 ? (
-            <Text style={styles.allLoaded}>End of notifications</Text>
+            <Text style={styles.allLoaded}>── end ──</Text>
           ) : null
         }
         renderItem={({ item }) => (
@@ -182,7 +221,10 @@ export default function NotificationsScreen() {
               if (item.card_id) router.push(`/task/${item.card_id}`);
             }}
           >
-            <Text style={styles.body}>{item.body}</Text>
+            <Text style={styles.body}>
+              {item.read === 0 ? '● ' : '  '}
+              {item.body}
+            </Text>
             <Text style={styles.time}>{item.created_at}</Text>
           </Pressable>
         )}
