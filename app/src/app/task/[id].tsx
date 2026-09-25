@@ -23,7 +23,7 @@ import type {
   Comment,
   Subtask,
 } from '../../api/types';
-import { font, radius, spacing } from '../../theme';
+import { font, spacing } from '../../theme';
 import { useTheme } from '../../theme/Theme';
 import { useAuth } from '../../context/auth';
 import { Avatar } from '../../components/Avatar';
@@ -222,12 +222,12 @@ export default function TaskScreen() {
         <View style={styles.headerRow}>
           <View style={[styles.priorityChip, { backgroundColor: priorityColor + '22' }]}>
             <Text style={[styles.priorityText, { color: priorityColor }]}>
-              {card.priority}
+              {`[${card.priority}]`}
             </Text>
           </View>
           {canEdit ? (
             <Pressable onPress={deleteCard} style={styles.deleteBtn}>
-              <Text style={styles.deleteText}>Delete</Text>
+              <Text style={styles.deleteText}>[ delete ]</Text>
             </Pressable>
           ) : (
             <Text style={styles.readonlyBadge}>[READ-ONLY]</Text>
@@ -280,7 +280,7 @@ export default function TaskScreen() {
                       card.priority === p && { color: '#fff' },
                     ]}
                   >
-                    {p}
+                    {`[ ${p} ]`}
                   </Text>
                 </Pressable>
               ))}
@@ -308,7 +308,7 @@ export default function TaskScreen() {
                   !card.assignee_id && { color: '#fff' },
                 ]}
               >
-                Unassigned
+                [ unassigned ]
               </Text>
             </Pressable>
             {members.map((m) => (
@@ -372,7 +372,7 @@ export default function TaskScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            Subtasks {doneCount}/{subtasks.length}
+            ── subtasks {doneCount}/{subtasks.length}
           </Text>
         </View>
         {subtasks.map((s) => (
@@ -402,15 +402,15 @@ export default function TaskScreen() {
               onSubmitEditing={addSubtask}
             />
             <Pressable onPress={addSubtask} style={styles.inlineBtn}>
-              <Text style={styles.inlineBtnText}>Add</Text>
+              <Text style={styles.inlineBtnText}>[ add ]</Text>
             </Pressable>
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Attachments</Text>
+        <Text style={styles.sectionTitle}>── attachments</Text>
         {canEdit && (
           <Pressable onPress={pickAndUpload} style={styles.attachBtn}>
-            <Text style={styles.attachBtnText}>+ Upload file</Text>
+            <Text style={styles.attachBtnText}>[ + upload file ]</Text>
           </Pressable>
         )}
         {attachments.map((a) => (
@@ -428,7 +428,7 @@ export default function TaskScreen() {
           </Pressable>
         ))}
 
-        <Text style={styles.sectionTitle}>Comments</Text>
+        <Text style={styles.sectionTitle}>── comments</Text>
         {comments.map((c) => (
           <View key={c.id} style={styles.comment}>
             <Text style={styles.commentAuthor}>{c.author_name}</Text>
@@ -447,7 +447,7 @@ export default function TaskScreen() {
               onSubmitEditing={addComment}
             />
             <Pressable onPress={addComment} style={styles.inlineBtn}>
-              <Text style={styles.inlineBtnText}>Send</Text>
+              <Text style={styles.inlineBtnText}>[ send ]</Text>
             </Pressable>
           </View>
         )}
@@ -471,13 +471,27 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     alignItems: 'center',
   },
   priorityChip: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: radius.full,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.card,
   },
-  priorityText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  priorityText: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
   deleteBtn: { paddingHorizontal: 10, paddingVertical: 6 },
-  deleteText: { color: colors.danger, fontWeight: '700', fontSize: 13 },
+  deleteText: {
+    fontFamily: font.mono,
+    color: colors.danger,
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 1,
+  },
   readonlyBadge: {
     fontFamily: font.mono,
     fontSize: 11,
@@ -487,6 +501,7 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     paddingVertical: 6,
   },
   titleInput: {
+    fontFamily: font.mono,
     fontSize: 22,
     fontWeight: '800',
     color: colors.text,
@@ -494,50 +509,59 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     padding: 0,
   },
   label: {
-    fontSize: 12,
+    fontFamily: font.mono,
+    fontSize: 11,
     fontWeight: '700',
     color: colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
     marginTop: spacing.md,
     marginBottom: spacing.xs,
   },
   descInput: {
     backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: colors.line,
+    borderRadius: 0,
     padding: spacing.sm + 4,
     minHeight: 80,
     textAlignVertical: 'top',
     color: colors.text,
-    fontSize: 14,
+    fontFamily: font.mono,
+    fontSize: 13,
   },
   row2: { flexDirection: 'row', gap: spacing.sm },
   chipRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   chip: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: radius.full,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
     backgroundColor: colors.card,
   },
-  chipText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  chipText: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 1,
+  },
   assigneeChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingRight: 12,
+    paddingRight: 10,
   },
   dateInput: {
     backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: colors.line,
+    borderRadius: 0,
     padding: spacing.sm + 4,
     color: colors.text,
-    fontSize: 14,
+    fontFamily: font.mono,
+    fontSize: 13,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -545,9 +569,12 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     marginTop: spacing.lg,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.text,
+    fontFamily: font.mono,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
@@ -560,16 +587,16 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: 0,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: colors.line,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.card,
   },
   checkboxDone: { backgroundColor: colors.success, borderColor: colors.success },
   check: { color: '#fff', fontSize: 12, fontWeight: '800' },
-  subtaskText: { fontSize: 14, color: colors.text, flex: 1 },
+  subtaskText: { fontFamily: font.mono, fontSize: 13, color: colors.text, flex: 1 },
   subtaskDone: {
     textDecorationLine: 'line-through',
     color: colors.textMuted,
@@ -579,53 +606,90 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     flex: 1,
     backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: colors.line,
+    borderRadius: 0,
     paddingHorizontal: spacing.sm + 4,
     paddingVertical: 10,
     color: colors.text,
-    fontSize: 14,
+    fontFamily: font.mono,
+    fontSize: 13,
   },
   inlineBtn: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  inlineBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  inlineBtnText: {
+    fontFamily: font.mono,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 1,
+  },
   attachBtn: {
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: colors.line,
+    borderRadius: 0,
     padding: spacing.md,
     alignItems: 'center',
     backgroundColor: colors.card,
   },
-  attachBtnText: { color: colors.primary, fontWeight: '700' },
+  attachBtnText: {
+    fontFamily: font.mono,
+    color: colors.primary,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   attachmentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: 0,
     padding: spacing.sm + 4,
     marginTop: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
   },
-  attachmentName: { color: colors.text, fontWeight: '600', flex: 1, fontSize: 13 },
-  attachmentSize: { color: colors.textMuted, fontSize: 12 },
+  attachmentName: {
+    fontFamily: font.mono,
+    color: colors.text,
+    fontWeight: '600',
+    flex: 1,
+    fontSize: 12,
+  },
+  attachmentSize: {
+    fontFamily: font.mono,
+    color: colors.textMuted,
+    fontSize: 11,
+  },
   comment: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: 0,
     padding: spacing.sm + 4,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
   },
-  commentAuthor: { fontWeight: '700', fontSize: 13, color: colors.text },
-  commentBody: { fontSize: 14, color: colors.text, marginTop: 4 },
-  commentTime: { fontSize: 11, color: colors.textMuted, marginTop: 6 },
+  commentAuthor: {
+    fontFamily: font.mono,
+    fontWeight: '700',
+    fontSize: 12,
+    color: colors.primary,
+  },
+  commentBody: {
+    fontFamily: font.mono,
+    fontSize: 13,
+    color: colors.text,
+    marginTop: 4,
+  },
+  commentTime: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    color: colors.textMuted,
+    marginTop: 6,
+  },
 });
 }
