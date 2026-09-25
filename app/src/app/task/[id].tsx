@@ -23,8 +23,9 @@ import type {
   Comment,
   Subtask,
 } from '../../api/types';
-import { radius, spacing } from '../../theme';
+import { font, radius, spacing } from '../../theme';
 import { useTheme } from '../../theme/Theme';
+import { useAuth } from '../../context/auth';
 import { Avatar } from '../../components/Avatar';
 
 export default function TaskScreen() {
@@ -32,6 +33,7 @@ export default function TaskScreen() {
   const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const cardId = Number(id);
+  const { user } = useAuth();
 
   const [card, setCard] = useState<Card | null>(null);
   const [members, setMembers] = useState<BoardMember[]>([]);
@@ -68,8 +70,12 @@ export default function TaskScreen() {
     load();
   }, [load]);
 
+  const myRole = members.find((m) => m.user_id === user?.id)?.role;
+  const canEdit =
+    !!user?.is_admin || (myRole !== undefined && myRole !== 'viewer');
+
   async function patchCard(body: Partial<Card>) {
-    if (!card) return;
+    if (!card || !canEdit) return;
     try {
       const updated = await api.patch<Card>(`/api/cards/${card.id}`, body);
       setCard(updated);
@@ -79,7 +85,7 @@ export default function TaskScreen() {
   }
 
   async function addSubtask() {
-    if (!newSubtask.trim()) return;
+    if (!canEdit || !newSubtask.trim()) return;
     await api.post(`/api/cards/${cardId}/subtasks`, {
       title: newSubtask.trim(),
     });
@@ -88,12 +94,13 @@ export default function TaskScreen() {
   }
 
   async function toggleSubtask(s: Subtask) {
+    if (!canEdit) return;
     await api.patch(`/api/subtasks/${s.id}`, { done: s.done === 0 });
     await load();
   }
 
   async function addComment() {
-    if (!newComment.trim()) return;
+    if (!canEdit || !newComment.trim()) return;
     await api.post(`/api/cards/${cardId}/comments`, {
       body: newComment.trim(),
     });
@@ -102,6 +109,7 @@ export default function TaskScreen() {
   }
 
   async function deleteCard() {
+    if (!canEdit) return;
     Alert.alert('Delete task?', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -116,6 +124,7 @@ export default function TaskScreen() {
   }
 
   async function pickAndUpload() {
+    if (!canEdit) return;
     if (Platform.OS === 'web') {
       const input = document.createElement('input');
       input.type = 'file';
@@ -216,9 +225,13 @@ export default function TaskScreen() {
               {card.priority}
             </Text>
           </View>
-          <Pressable onPress={deleteCard} style={styles.deleteBtn}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </Pressable>
+          {canEdit ? (
+            <Pressable onPress={deleteCard} style={styles.deleteBtn}>
+              <Text style={styles.deleteText}>Delete</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.readonlyBadge}>[READ-ONLY]</Text>
+          )}
         </View>
 
         <TextInput
@@ -227,6 +240,7 @@ export default function TaskScreen() {
           onChangeText={(t) => setCard({ ...card, title: t })}
           onBlur={() => patchCard({ title: card.title })}
           multiline
+          editable={canEdit}
           placeholder="Task title"
           placeholderTextColor={colors.textMuted}
         />
@@ -238,6 +252,7 @@ export default function TaskScreen() {
           onChangeText={(t) => setCard({ ...card, description: t })}
           onBlur={() => patchCard({ description: card.description })}
           multiline
+          editable={canEdit}
           placeholder="Add a description…"
           placeholderTextColor={colors.textMuted}
         />
@@ -249,6 +264,7 @@ export default function TaskScreen() {
               {(['low', 'medium', 'high', 'urgent'] as const).map((p) => (
                 <Pressable
                   key={p}
+                  disabled={!canEdit}
                   onPress={() => patchCard({ priority: p })}
                   style={[
                     styles.chip,
@@ -276,6 +292,7 @@ export default function TaskScreen() {
           <Text style={styles.label}>Assignee</Text>
           <View style={styles.chipRow}>
             <Pressable
+              disabled={!canEdit}
               onPress={() => patchCard({ assignee_id: null })}
               style={[
                 styles.chip,
@@ -297,6 +314,7 @@ export default function TaskScreen() {
             {members.map((m) => (
               <Pressable
                 key={m.user_id}
+                disabled={!canEdit}
                 onPress={() => patchCard({ assignee_id: m.user_id })}
                 style={[
                   styles.chip,
@@ -331,6 +349,7 @@ export default function TaskScreen() {
             <TextInput
               style={styles.dateInput}
               value={card.start_date ?? ''}
+              editable={canEdit}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.textMuted}
               onChangeText={(t) => setCard({ ...card, start_date: t || null })}
@@ -342,6 +361,7 @@ export default function TaskScreen() {
             <TextInput
               style={styles.dateInput}
               value={card.due_date ?? ''}
+              editable={canEdit}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.textMuted}
               onChangeText={(t) => setCard({ ...card, due_date: t || null })}
@@ -371,24 +391,28 @@ export default function TaskScreen() {
             </Text>
           </Pressable>
         ))}
-        <View style={styles.inlineAdd}>
-          <TextInput
-            style={styles.inlineInput}
-            placeholder="Add subtask"
-            placeholderTextColor={colors.textMuted}
-            value={newSubtask}
-            onChangeText={setNewSubtask}
-            onSubmitEditing={addSubtask}
-          />
-          <Pressable onPress={addSubtask} style={styles.inlineBtn}>
-            <Text style={styles.inlineBtnText}>Add</Text>
-          </Pressable>
-        </View>
+        {canEdit && (
+          <View style={styles.inlineAdd}>
+            <TextInput
+              style={styles.inlineInput}
+              placeholder="Add subtask"
+              placeholderTextColor={colors.textMuted}
+              value={newSubtask}
+              onChangeText={setNewSubtask}
+              onSubmitEditing={addSubtask}
+            />
+            <Pressable onPress={addSubtask} style={styles.inlineBtn}>
+              <Text style={styles.inlineBtnText}>Add</Text>
+            </Pressable>
+          </View>
+        )}
 
         <Text style={styles.sectionTitle}>Attachments</Text>
-        <Pressable onPress={pickAndUpload} style={styles.attachBtn}>
-          <Text style={styles.attachBtnText}>+ Upload file</Text>
-        </Pressable>
+        {canEdit && (
+          <Pressable onPress={pickAndUpload} style={styles.attachBtn}>
+            <Text style={styles.attachBtnText}>+ Upload file</Text>
+          </Pressable>
+        )}
         {attachments.map((a) => (
           <Pressable
             key={a.id}
@@ -412,19 +436,21 @@ export default function TaskScreen() {
             <Text style={styles.commentTime}>{c.created_at}</Text>
           </View>
         ))}
-        <View style={styles.inlineAdd}>
-          <TextInput
-            style={styles.inlineInput}
-            placeholder="Write a comment…"
-            placeholderTextColor={colors.textMuted}
-            value={newComment}
-            onChangeText={setNewComment}
-            onSubmitEditing={addComment}
-          />
-          <Pressable onPress={addComment} style={styles.inlineBtn}>
-            <Text style={styles.inlineBtnText}>Send</Text>
-          </Pressable>
-        </View>
+        {canEdit && (
+          <View style={styles.inlineAdd}>
+            <TextInput
+              style={styles.inlineInput}
+              placeholder="Write a comment…"
+              placeholderTextColor={colors.textMuted}
+              value={newComment}
+              onChangeText={setNewComment}
+              onSubmitEditing={addComment}
+            />
+            <Pressable onPress={addComment} style={styles.inlineBtn}>
+              <Text style={styles.inlineBtnText}>Send</Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -452,6 +478,14 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   priorityText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
   deleteBtn: { paddingHorizontal: 10, paddingVertical: 6 },
   deleteText: { color: colors.danger, fontWeight: '700', fontSize: 13 },
+  readonlyBadge: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.warning,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
   titleInput: {
     fontSize: 22,
     fontWeight: '800',
