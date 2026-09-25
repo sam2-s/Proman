@@ -3,7 +3,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Loading } from '../../components/Tui';
 import { api, API_URL, avatarSrc, getToken } from '../../api/client';
 import type {
   Attachment,
@@ -202,9 +202,7 @@ export default function TaskScreen() {
 
   if (loading || !card) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="task" />
     );
   }
 

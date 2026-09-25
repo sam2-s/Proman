@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -12,7 +11,7 @@ import { api } from '../api/client';
 import { Avatar } from '../components/Avatar';
 import { Panel } from '../components/Panel';
 import { StatusBar } from '../components/StatusBar';
-import { Badge, TuiButton } from '../components/Tui';
+import { Badge, Loading, TuiButton } from '../components/Tui';
 import { useAuth } from '../context/auth';
 import { font, spacing } from '../theme';
 import { useTheme } from '../theme/Theme';
@@ -90,7 +89,7 @@ export default function AdminScreen() {
   if (!users && !error) {
     return (
       <View style={styles.screen}>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 60 }} />
+        <Loading label="admin" />
       </View>
     );
   }

@@ -1,7 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   StyleSheet,
@@ -14,7 +13,7 @@ import type { Member, ProjectDetail, Role } from '../../../api/types';
 import { Avatar } from '../../../components/Avatar';
 import { Panel } from '../../../components/Panel';
 import { StatusBar } from '../../../components/StatusBar';
-import { Badge, TuiButton } from '../../../components/Tui';
+import { Badge, Loading, TuiButton } from '../../../components/Tui';
 import { useAuth } from '../../../context/auth';
 import { font, spacing } from '../../../theme';
 import { useTheme } from '../../../theme/Theme';
@@ -99,9 +98,7 @@ export default function MembersScreen() {
 
   if (!detail) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="members" />
     );
   }
 

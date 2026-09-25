@@ -1,13 +1,13 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { EmptyState, Loading } from '../../../components/Tui';
 import { api } from '../../../api/client';
 import type { ActivityItem } from '../../../api/types';
 import { useTheme } from '../../../theme/Theme';
@@ -122,9 +122,7 @@ export default function ActivityScreen() {
 
   if (!items) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="activity" />
     );
   }
 
@@ -135,12 +133,10 @@ export default function ActivityScreen() {
         keyExtractor={(a) => String(a.id)}
         contentContainerStyle={{ paddingBottom: spacing.lg }}
         ListEmptyComponent={
-          <View style={styles.emptyBox}>
-            <Text style={styles.emptyTitle}>no activity yet</Text>
-            <Text style={styles.emptyHint}>
-              task moves, comments and edits stream here as your team works
-            </Text>
-          </View>
+          <EmptyState
+            title="no activity yet"
+            hint="task moves, comments and edits stream here as your team works"
+          />
         }
         ListFooterComponent={
           hasMore ? (

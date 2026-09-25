@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
@@ -9,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { EmptyState, Loading } from '../components/Tui';
 import { api } from '../api/client';
 import type { NotificationItem } from '../api/types';
 import { useTheme } from '../theme/Theme';
@@ -177,9 +177,7 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="notifications" />
     );
   }
 
@@ -195,12 +193,10 @@ export default function NotificationsScreen() {
         data={items}
         keyExtractor={(n) => String(n.id)}
         ListEmptyComponent={
-          <View style={styles.emptyBox}>
-            <Text style={styles.emptyTitle}>you&apos;re all caught up</Text>
-            <Text style={styles.emptyHint}>
-              new comments, assignments and mentions land here
-            </Text>
-          </View>
+          <EmptyState
+            title="all caught up"
+            hint="new comments, assignments and mentions land here"
+          />
         }
         ListFooterComponent={
           hasMore ? (

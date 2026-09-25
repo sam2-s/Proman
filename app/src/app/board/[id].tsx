@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Modal,
   Pressable,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Loading } from '../../components/Tui';
 import { api } from '../../api/client';
 import type { Card } from '../../api/types';
 import { useAuth } from '../../context/auth';
@@ -182,9 +182,7 @@ export default function BoardScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="board" />
     );
   }
 

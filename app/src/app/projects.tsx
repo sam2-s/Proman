@@ -14,7 +14,7 @@ import { api } from '../api/client';
 import type { Board, Project } from '../api/types';
 import { Avatar } from '../components/Avatar';
 import { StatusBar } from '../components/StatusBar';
-import { TuiButton } from '../components/Tui';
+import { EmptyState, TuiButton } from '../components/Tui';
 import { useAuth } from '../context/auth';
 import { font, spacing } from '../theme';
 import { useTheme } from '../theme/Theme';
@@ -140,13 +140,10 @@ export default function Projects() {
           <RefreshControl refreshing={refreshing} onRefresh={load} />
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>no projects found</Text>
-            <Text style={styles.emptyText}>
-              press [ + new project ] to create your first board, timeline and
-              calendar
-            </Text>
-          </View>
+          <EmptyState
+            title="no projects found"
+            hint="press [ + new project ] to create your first board, timeline and calendar"
+          />
         }
         renderItem={({ item }) => (
           <Pressable

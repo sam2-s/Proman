@@ -1,12 +1,12 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { EmptyState, Loading } from '../../../components/Tui';
 import { api } from '../../../api/client';
 import type { Card } from '../../../api/types';
 import { font, spacing } from '../../../theme';
@@ -80,9 +80,7 @@ export default function TimelineScreen() {
 
   if (cards === null) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="timeline" />
     );
   }
 
@@ -153,12 +151,10 @@ export default function TimelineScreen() {
               );
             })}
             {rows.length === 0 && (
-              <View style={styles.emptyWrap}>
-                <Text style={styles.empty}>no dated tasks yet</Text>
-                <Text style={styles.emptyHint}>
-                  set start/due dates on a task to plot it here
-                </Text>
-              </View>
+              <EmptyState
+                title="no dated tasks yet"
+                hint="set start/due dates on a task to plot it here"
+              />
             )}
           </View>
         </View>

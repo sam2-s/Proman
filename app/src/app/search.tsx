@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { EmptyState, Loading } from '../components/Tui';
 import { api } from '../api/client';
 import type { SearchResult } from '../api/types';
 import { useTheme } from '../theme/Theme';
@@ -102,9 +102,7 @@ export default function SearchScreen() {
 
   if (loading && !results.length && q) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="search" />
     );
   }
 
@@ -124,20 +122,15 @@ export default function SearchScreen() {
         keyExtractor={(item) => String(item.id)}
         ListEmptyComponent={
           q.trim() ? (
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyTitle}>no matching tasks</Text>
-              <Text style={styles.emptyHint}>
-                try another keyword — search covers titles and descriptions
-                across your projects
-              </Text>
-            </View>
+            <EmptyState
+              title="no matching tasks"
+              hint="try another keyword — search covers titles and descriptions across your projects"
+            />
           ) : (
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyTitle}>type to search</Text>
-              <Text style={styles.emptyHint}>
-                grep task titles and descriptions across all of your projects
-              </Text>
-            </View>
+            <EmptyState
+              title="type to search"
+              hint="grep task titles and descriptions across all of your projects"
+            />
           )
         }
         renderItem={({ item }) => (

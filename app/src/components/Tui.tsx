@@ -115,6 +115,84 @@ export function Divider({ label, style }: DividerProps) {
   );
 }
 
+export interface LoadingProps {
+  label?: string;
+}
+
+/** Bracketed loading indicator: `[ loading… ]`. */
+export function Loading({ label = 'loading' }: LoadingProps) {
+  const colors = useTheme();
+  return (
+    <View style={loadStyles.center}>
+      <Text style={[loadStyles.text, { color: colors.textMuted }]}>
+        {`[ ${label}… ]`}
+      </Text>
+    </View>
+  );
+}
+
+export interface EmptyStateProps {
+  title: string;
+  hint?: string;
+}
+
+/** Box-framed empty state: `┌─ TITLE` + muted hint + `└─`. */
+export function EmptyState({ title, hint }: EmptyStateProps) {
+  const colors = useTheme();
+  return (
+    <View style={emptyStyles.wrap}>
+      <Text style={[emptyStyles.title, { color: colors.textSecondary }]}>
+        {`┌─ ${title}`}
+      </Text>
+      {hint ? (
+        <Text style={[emptyStyles.hint, { color: colors.textMuted }]}>{hint}</Text>
+      ) : null}
+      <Text style={[emptyStyles.rule, { color: colors.line }]}>└─</Text>
+    </View>
+  );
+}
+
+const loadStyles = StyleSheet.create({
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  text: {
+    fontFamily: font.mono,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+});
+
+const emptyStyles = StyleSheet.create({
+  wrap: {
+    marginTop: 48,
+    paddingHorizontal: spacing.lg,
+  },
+  title: {
+    fontFamily: font.mono,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  hint: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    lineHeight: 17,
+    marginTop: spacing.sm,
+    marginLeft: 4,
+  },
+  rule: {
+    fontFamily: font.mono,
+    fontSize: 14,
+    marginTop: spacing.sm,
+  },
+});
+
 const styles = StyleSheet.create({
   btn: {
     borderWidth: 1,

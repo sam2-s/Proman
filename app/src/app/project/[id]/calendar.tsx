@@ -1,13 +1,13 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Loading } from '../../../components/Tui';
 import { api } from '../../../api/client';
 import type { Card } from '../../../api/types';
 import { font, spacing } from '../../../theme';
@@ -69,9 +69,7 @@ export default function CalendarScreen() {
 
   if (cards === null) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Loading label="calendar" />
     );
   }
 
