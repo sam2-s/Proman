@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Card } from '../api/types';
-import { radius, shadow, spacing } from '../theme';
+import { font, spacing } from '../theme';
 import { useTheme } from '../theme/Theme';
 
 const HIDDEN_CARD_HEIGHT = 140;
@@ -156,7 +156,7 @@ export function TaskCard({
             <View style={styles.meta}>
               <View style={[styles.badge, { backgroundColor: priorityColor + '22' }]}>
                 <Text style={[styles.badgeText, { color: priorityColor }]}>
-                  {card.priority}
+                  {`[${card.priority}]`}
                 </Text>
               </View>
               {card.due_date ? (
@@ -171,7 +171,7 @@ export function TaskCard({
               ) : null}
             </View>
             <View style={styles.actions}>
-              <Text style={styles.dragHint}>⠿ drag</Text>
+              <Text style={styles.dragHint}>⠿ move</Text>
               <Text
                 onPress={onMoveLeft}
                 style={[styles.arrow, isFirst && styles.arrowDisabled]}
@@ -185,7 +185,7 @@ export function TaskCard({
                 →
               </Text>
               <Text onPress={onPress} style={styles.open}>
-                Open
+                [ open ]
               </Text>
             </View>
           </View>
@@ -245,11 +245,10 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   return StyleSheet.create({
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
     overflow: 'hidden',
-    ...shadow.card,
   },
   cardHidden: {
     opacity: 0,
@@ -265,16 +264,22 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     shadowOpacity: 0.35,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
-    transform: [{ rotate: '-1.5deg' }],
+    borderColor: colors.primary,
   },
   priorityBar: { width: 4, alignSelf: 'stretch' },
   body: { flex: 1, padding: spacing.sm + 4 },
-  title: { fontSize: 14, fontWeight: '700', color: colors.text },
+  title: {
+    fontFamily: font.mono,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+  },
   desc: {
-    fontSize: 12,
+    fontFamily: font.mono,
+    fontSize: 11,
     color: colors.textSecondary,
     marginTop: 4,
-    lineHeight: 16,
+    lineHeight: 15,
   },
   meta: {
     flexDirection: 'row',
@@ -283,23 +288,27 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     marginTop: spacing.sm,
     flexWrap: 'wrap',
   },
-  badge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radius.full,
+  badge: { paddingHorizontal: 0, paddingVertical: 0, borderRadius: 0 },
+  badgeText: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
-  badgeText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
-  due: { fontSize: 11, color: colors.textMuted },
+  due: { fontFamily: font.mono, fontSize: 10, color: colors.textMuted },
   avatar: {
     width: 20,
     height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.primaryLight,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 'auto',
   },
-  avatarText: { fontSize: 10, fontWeight: '800', color: colors.primary },
+  avatarText: { fontFamily: font.mono, fontSize: 10, fontWeight: '800', color: colors.primary },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -308,22 +317,26 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     marginTop: spacing.sm,
   },
   dragHint: {
-    fontSize: 11,
+    fontFamily: font.mono,
+    fontSize: 10,
     color: colors.textMuted,
-    fontWeight: '600',
+    letterSpacing: 1,
     marginRight: 'auto',
   },
   arrow: {
-    fontSize: 14,
+    fontFamily: font.mono,
+    fontSize: 13,
     fontWeight: '700',
     color: colors.textSecondary,
     paddingHorizontal: 6,
   },
   arrowDisabled: { opacity: 0.3 },
   open: {
-    fontSize: 12,
+    fontFamily: font.mono,
+    fontSize: 11,
     fontWeight: '700',
     color: colors.primary,
+    letterSpacing: 1,
   },
 });
 }
