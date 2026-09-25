@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../context/auth';
+import { font } from '../theme';
 import { ThemeProvider, useTheme } from '../theme/Theme';
 
 function RootStack() {
@@ -11,7 +12,13 @@ function RootStack() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.card },
         headerTintColor: colors.text,
-        headerTitleStyle: { fontWeight: '700' },
+        headerTitleStyle: {
+          fontFamily: font.mono,
+          fontSize: 14,
+          fontWeight: '700',
+          color: colors.text,
+        },
+        headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.bg },
       }}
     >
