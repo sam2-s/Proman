@@ -143,6 +143,16 @@ export default function ProfileScreen() {
         <Panel title="session">
           <TuiButton label="log out" variant="danger" onPress={onLogout} />
         </Panel>
+
+        {user.is_admin && (
+          <Panel title="admin" accent>
+            <TuiButton
+              label="open admin console"
+              variant="primary"
+              onPress={() => router.push('/admin')}
+            />
+          </Panel>
+        )}
       </ScrollView>
 
       <StatusBar
