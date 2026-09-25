@@ -32,6 +32,7 @@ async fn main() -> anyhow::Result<()> {
     std::fs::create_dir_all(&upload_dir)?;
 
     let db = db::init().await?;
+    bootstrap_admin(&db).await?;
     let state = Arc::new(AppState {
         db,
         upload_dir,
@@ -54,5 +55,22 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Proman API listening on http://{addr}");
 
     axum::serve(listener, app).await?;
+    Ok(())
+}
+
+/// Promote `PROMAN_ADMIN_USERNAME` (a username) to global admin on startup.
+async fn bootstrap_admin(db: &sqlx::SqlitePool) -> anyhow::Result<()> {
+    let Ok(username) = std::env::var("PROMAN_ADMIN_USERNAME") else {
+        return Ok(());
+    };
+    let updated = sqlx::query("UPDATE users SET is_admin = 1 WHERE username = ? COLLATE NOCASE")
+        .bind(username.trim())
+        .execute(db)
+        .await?;
+    if updated.rows_affected() > 0 {
+        tracing::info!("bootstrapped global admin @{username}");
+    } else {
+        tracing::warn!("PROMAN_ADMIN_USERNAME=@{username}: user not found (create it first)");
+    }
     Ok(())
 }

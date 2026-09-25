@@ -77,7 +77,10 @@ pub async fn set_is_admin(
     if updated.rows_affected() == 0 {
         return Err(ApiError::NotFound("user not found".into()));
     }
-    tracing::info!("admin {user_id} set is_admin={} for user {target_id}", req.is_admin);
+    tracing::info!(
+        "admin {user_id} set is_admin={} for user {target_id}",
+        req.is_admin
+    );
     Ok(Json(serde_json::json!({
         "id": target_id,
         "is_admin": req.is_admin,
@@ -94,7 +97,9 @@ pub async fn delete_user(
     require_admin(&state, user_id).await?;
 
     if target_id == user_id {
-        return Err(ApiError::BadRequest("you cannot delete your own account".into()));
+        return Err(ApiError::BadRequest(
+            "you cannot delete your own account".into(),
+        ));
     }
     let deleted = sqlx::query("DELETE FROM users WHERE id = ?")
         .bind(target_id)
