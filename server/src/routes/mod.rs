@@ -1,3 +1,4 @@
+pub mod admin;
 pub mod attachments;
 pub mod auth;
 pub mod boards;
@@ -35,6 +36,11 @@ pub fn router(state: SharedState) -> Router {
             post(feed::mark_notification_read),
         )
         .route("/api/projects", get(projects::list).post(projects::create))
+        .route("/api/admin/users", get(admin::list_users))
+        .route(
+            "/api/admin/users/{id}",
+            patch(admin::set_is_admin).delete(admin::delete_user),
+        )
         .route(
             "/api/projects/{id}",
             get(projects::detail).delete(projects::remove),
