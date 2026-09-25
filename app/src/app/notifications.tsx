@@ -54,6 +54,7 @@ export default function NotificationsScreen() {
   }, [hasMore, items.length, loadingMore]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch; state updates happen after await
     void load();
   }, [load]);
 
@@ -146,7 +147,7 @@ export default function NotificationsScreen() {
       <FlatList
         data={items}
         keyExtractor={(n) => String(n.id)}
-        ListEmptyComponent={<Text style={styles.empty}>You're all caught up</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>You’re all caught up</Text>}
         ListFooterComponent={
           hasMore ? (
             <Pressable style={styles.loadMore} onPress={() => void loadMore()}>

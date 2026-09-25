@@ -13,7 +13,9 @@ export function useProjectSocket(
 ): { connected: boolean } {
   const [connected, setConnected] = useState(false);
   const handlerRef = useRef(onEvent);
-  handlerRef.current = onEvent;
+  useEffect(() => {
+    handlerRef.current = onEvent;
+  }, [onEvent]);
 
   const connect = useCallback(async () => {
     if (!projectId) return;

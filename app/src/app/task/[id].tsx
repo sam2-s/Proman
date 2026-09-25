@@ -5,8 +5,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -62,9 +60,10 @@ export default function TaskScreen() {
     } finally {
       setLoading(false);
     }
-  }, [cardId]);
+  }, [cardId, setCard]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch; state updates happen after await
     load();
   }, [load]);
 

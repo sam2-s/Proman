@@ -24,6 +24,7 @@ export function useBoard(boardId: number) {
   }, [boardId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch; state updates happen after await
     load();
   }, [load]);
 

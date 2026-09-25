@@ -52,6 +52,7 @@ export default function ActivityScreen() {
   }, [hasMore, items, loadingMore, projectId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch; state updates happen after await
     void load();
   }, [load]);
 

@@ -70,8 +70,6 @@ export function TaskCard({
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const startX = useSharedValue(0);
-  const startY = useSharedValue(0);
   const active = useSharedValue(false);
   const dragging = useSharedValue(false);
 
@@ -87,7 +85,6 @@ export function TaskCard({
     }));
   };
   const endDrag = (absX: number, absY: number) => {
-    const width = 260;
     setDrag({ cardId: null, x: 0, y: 0, width: 0 });
     onDrop(card.id, absX, absY);
   };
