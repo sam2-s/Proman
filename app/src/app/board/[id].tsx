@@ -42,6 +42,10 @@ export default function BoardScreen() {
   const projectId = data?.board.project_id ?? null;
   const { connected } = useProjectSocket(projectId, applyEvent);
 
+  // Viewer = read-only; global admins can edit anywhere.
+  const myRole = data?.members?.find((m) => m.user_id === user?.id)?.role;
+  const canEdit = !!user?.is_admin || (myRole !== undefined && myRole !== 'viewer');
+
   // Keep board-level absolute origin for drop math on native.
   useEffect(() => {
     // no-op placeholder for future measure; layouts registered per column
@@ -49,7 +53,7 @@ export default function BoardScreen() {
 
   const handleDrop = useCallback(
     (cardId: number, absX: number, absY: number) => {
-      if (!data) return;
+      if (!data || !canEdit) return;
       const targetColId = dd.hitColumn(absX, absY);
       if (targetColId == null) return;
 
@@ -77,12 +81,12 @@ export default function BoardScreen() {
       if (sameCol && toPos === cardPos) return;
       void moveCard(card, targetColId, toPos);
     },
-    [data, dd, moveCard],
+    [data, dd, moveCard, canEdit],
   );
 
   const moveWithin = useCallback(
     async (cardId: number, direction: -1 | 1) => {
-      if (!data) return;
+      if (!data || !canEdit) return;
       const cols = data.columns;
       let fromIdx = -1;
       let cardPos = -1;
@@ -106,11 +110,11 @@ export default function BoardScreen() {
         await moveCard(card, cols[fromIdx].column.id, newPos);
       }
     },
-    [data, moveCard],
+    [data, moveCard, canEdit],
   );
 
   async function createColumn() {
-    if (!newColumnName.trim() || !data) return;
+    if (!canEdit || !newColumnName.trim() || !data) return;
     try {
       await api.post(`/api/boards/${data.board.id}/columns`, {
         name: newColumnName.trim(),
@@ -124,7 +128,7 @@ export default function BoardScreen() {
   }
 
   async function createCard(columnId: number) {
-    if (!quickTitle.trim()) return;
+    if (!canEdit || !quickTitle.trim()) return;
     try {
       await addCard(columnId, quickTitle.trim());
       setQuickTitle('');
@@ -136,7 +140,7 @@ export default function BoardScreen() {
 
   async function renameColumn(columnId: number) {
     const name = editColName.trim();
-    if (!name) return;
+    if (!canEdit || !name) return;
     try {
       await api.patch(`/api/columns/${columnId}`, { name });
       setEditingCol(null);
@@ -147,6 +151,7 @@ export default function BoardScreen() {
   }
 
   function deleteColumn(columnId: number, name: string) {
+    if (!canEdit) return;
     Alert.alert(
       `Delete "${name}"?`,
       'All tasks in this column will be permanently deleted.',
@@ -208,6 +213,8 @@ export default function BoardScreen() {
             />
             <Text style={styles.status}>
               {connected ? 'Live' : 'Offline'} · {user?.name}
+              {myRole ? ` · ${myRole}` : user?.is_admin ? ' · admin' : ''}
+              {!canEdit ? ' · read-only' : ''}
               {dd.activeCardId ? ' · dragging' : ''}
             </Text>
           </View>
@@ -239,12 +246,14 @@ export default function BoardScreen() {
           >
             <Text style={styles.toolBtnText}>Team</Text>
           </Pressable>
-          <Pressable
-            style={[styles.toolBtn, styles.toolBtnPrimary]}
-            onPress={() => setAddColumnOpen(true)}
-          >
-            <Text style={[styles.toolBtnText, { color: '#fff' }]}>+ Column</Text>
-          </Pressable>
+          {canEdit && (
+            <Pressable
+              style={[styles.toolBtn, styles.toolBtnPrimary]}
+              onPress={() => setAddColumnOpen(true)}
+            >
+              <Text style={[styles.toolBtnText, { color: '#fff' }]}>+ Column</Text>
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -299,34 +308,42 @@ export default function BoardScreen() {
               ) : (
                 <Pressable
                   style={{ flex: 1 }}
-                  onLongPress={() => {
-                    setEditingCol(col.column.id);
-                    setEditColName(col.column.name);
-                  }}
+                  onLongPress={
+                    canEdit
+                      ? () => {
+                          setEditingCol(col.column.id);
+                          setEditColName(col.column.name);
+                        }
+                      : undefined
+                  }
                 >
                   <Text style={styles.columnTitle}>{col.column.name}</Text>
                 </Pressable>
               )}
               <Text style={styles.count}>{col.cards.length}</Text>
-              <Pressable
-                onPress={() => {
-                  setEditingCol(col.column.id);
-                  setEditColName(col.column.name);
-                }}
-                hitSlop={8}
-                style={styles.colAction}
-              >
-                <Text style={styles.colActionText}>✎</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => deleteColumn(col.column.id, col.column.name)}
-                hitSlop={8}
-                style={styles.colAction}
-              >
-                <Text style={[styles.colActionText, { color: colors.danger }]}>
-                  ×
-                </Text>
-              </Pressable>
+              {canEdit && (
+                <>
+                  <Pressable
+                    onPress={() => {
+                      setEditingCol(col.column.id);
+                      setEditColName(col.column.name);
+                    }}
+                    hitSlop={8}
+                    style={styles.colAction}
+                  >
+                    <Text style={styles.colActionText}>✎</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => deleteColumn(col.column.id, col.column.name)}
+                    hitSlop={8}
+                    style={styles.colAction}
+                  >
+                    <Text style={[styles.colActionText, { color: colors.danger }]}>
+                      ×
+                    </Text>
+                  </Pressable>
+                </>
+              )}
             </View>
             <ScrollView
               contentContainerStyle={{
@@ -346,47 +363,51 @@ export default function BoardScreen() {
                     cardIdx === col.cards.length - 1
                   }
                   onPress={() => router.push(`/task/${card.id}`)}
-                  onMoveLeft={() => moveWithin(card.id, -1)}
-                  onMoveRight={() => moveWithin(card.id, 1)}
+                  onMoveLeft={canEdit ? () => moveWithin(card.id, -1) : undefined}
+                  onMoveRight={canEdit ? () => moveWithin(card.id, 1) : undefined}
                   assigneeName={memberNameById(card.assignee_id)}
                   drag={dd.drag}
                   setDrag={dd.setDrag}
                   onDrop={handleDrop}
                   isDragging={dd.isDragging(card.id)}
+                  draggable={canEdit}
                 />
               ))}
             </ScrollView>
-            {quickAddCol === col.column.id ? (
-              <View style={styles.quickAdd}>
-                <TextInput
-                  autoFocus
-                  style={styles.quickInput}
-                  placeholder="Task title"
-                  placeholderTextColor={colors.textMuted}
-                  value={quickTitle}
-                  onChangeText={setQuickTitle}
-                  onSubmitEditing={() => createCard(col.column.id)}
-                  onBlur={() => {
-                    if (!quickTitle.trim()) setQuickAddCol(null);
-                  }}
-                />
-              </View>
-            ) : (
-              <Pressable
-                style={styles.addCard}
-                onPress={() => setQuickAddCol(col.column.id)}
-              >
-                <Text style={styles.addCardText}>+ Add task</Text>
-              </Pressable>
-            )}
+            {canEdit &&
+              (quickAddCol === col.column.id ? (
+                <View style={styles.quickAdd}>
+                  <TextInput
+                    autoFocus
+                    style={styles.quickInput}
+                    placeholder="Task title"
+                    placeholderTextColor={colors.textMuted}
+                    value={quickTitle}
+                    onChangeText={setQuickTitle}
+                    onSubmitEditing={() => createCard(col.column.id)}
+                    onBlur={() => {
+                      if (!quickTitle.trim()) setQuickAddCol(null);
+                    }}
+                  />
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.addCard}
+                  onPress={() => setQuickAddCol(col.column.id)}
+                >
+                  <Text style={styles.addCardText}>+ Add task</Text>
+                </Pressable>
+              ))}
           </View>
         ))}
 
-        <View style={[styles.column, styles.addColumnCol]}>
-          <Pressable onPress={() => setAddColumnOpen(true)}>
-            <Text style={styles.addCardText}>+ Add column</Text>
-          </Pressable>
-        </View>
+        {canEdit && (
+          <View style={[styles.column, styles.addColumnCol]}>
+            <Pressable onPress={() => setAddColumnOpen(true)}>
+              <Text style={styles.addCardText}>+ Add column</Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       {dragCard ? <DragGhost card={dragCard} drag={dd.drag} /> : null}

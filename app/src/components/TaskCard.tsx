@@ -46,6 +46,8 @@ interface Props {
   onDrop: (cardId: number, absX: number, absY: number) => void;
   /** Hide the original card while it is being dragged. */
   isDragging?: boolean;
+  /** Viewers cannot drag — disables the pan gesture. Default true. */
+  draggable?: boolean;
 }
 
 export function TaskCard({
@@ -61,6 +63,7 @@ export function TaskCard({
   setDrag,
   onDrop,
   isDragging,
+  draggable = true,
 }: Props) {
   const colors = useTheme();
   const styles = makeStyles(colors);
@@ -90,6 +93,7 @@ export function TaskCard({
   };
 
   const pan = Gesture.Pan()
+    .enabled(draggable)
     .minDistance(8)
     .onBegin((e) => {
       runOnJS(startDrag)(e.absoluteX, e.absoluteY, 260);
