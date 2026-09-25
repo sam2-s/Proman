@@ -13,12 +13,15 @@ import {
 import { api } from '../api/client';
 import type { Board, Project } from '../api/types';
 import { Avatar } from '../components/Avatar';
+import { StatusBar } from '../components/StatusBar';
+import { TuiButton } from '../components/Tui';
 import { useAuth } from '../context/auth';
+import { font, spacing } from '../theme';
 import { useTheme } from '../theme/Theme';
-import { radius, shadow, spacing } from '../theme';
 
 export default function Projects() {
   const colors = useTheme();
+  const styles = makeStyles(colors);
   const { user, logout } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -94,178 +97,38 @@ export default function Projects() {
     if (boards[0]) router.push(`/board/${boards[0].id}`);
   }
 
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg },
-    header: {
-      paddingTop: spacing.xl,
-      paddingHorizontal: spacing.md,
-      paddingBottom: spacing.sm,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    hello: { color: colors.textSecondary, fontSize: 14 },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
-    headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-    iconBtn: {
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.md,
-      backgroundColor: colors.bg,
-      borderWidth: 1,
-      borderColor: colors.border,
-      position: 'relative',
-    },
-    iconBtnText: { color: colors.text, fontWeight: '700', fontSize: 12 },
-    badge: {
-      position: 'absolute',
-      top: -7,
-      right: -7,
-      minWidth: 18,
-      height: 18,
-      borderRadius: 9,
-      paddingHorizontal: 4,
-      backgroundColor: colors.danger,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-    logoutBtn: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.md,
-      backgroundColor: colors.bg,
-    },
-    logoutText: { color: colors.danger, fontWeight: '600' },
-    projectCard: {
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: spacing.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-      ...shadow.card,
-    },
-    projectRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-    projectName: { fontSize: 16, fontWeight: '700', color: colors.text },
-    projectDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-    roleBadge: {
-      backgroundColor: colors.primaryLight,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: radius.full,
-    },
-    roleText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
-    empty: {
-      alignItems: 'center',
-      paddingTop: 64,
-      paddingHorizontal: spacing.lg,
-    },
-    emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-    emptyText: {
-      textAlign: 'center',
-      color: colors.textSecondary,
-      marginTop: spacing.sm,
-      lineHeight: 20,
-    },
-    fab: {
-      position: 'absolute',
-      bottom: spacing.lg,
-      right: spacing.lg,
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: 14,
-      borderRadius: radius.full,
-      ...shadow.card,
-    },
-    fabText: { color: '#fff', fontWeight: '700' },
-    modalBackdrop: {
-      flex: 1,
-      backgroundColor: 'rgba(15,23,42,0.45)',
-      justifyContent: 'center',
-      padding: spacing.lg,
-    },
-    modalCard: {
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: spacing.lg,
-      maxWidth: 440,
-      width: '100%',
-      alignSelf: 'center',
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: '800',
-      color: colors.text,
-      marginBottom: spacing.md,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radius.md,
-      padding: spacing.md,
-      fontSize: 15,
-      color: colors.text,
-      marginBottom: spacing.sm,
-      backgroundColor: colors.card,
-    },
-    modalActions: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      gap: spacing.sm,
-      marginTop: spacing.sm,
-    },
-    btnGhost: { padding: 12, borderRadius: radius.md },
-    btnGhostText: { color: colors.textSecondary, fontWeight: '600' },
-    btnPrimary: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.md,
-      padding: 12,
-      borderRadius: radius.md,
-    },
-    btnPrimaryText: { color: '#fff', fontWeight: '700' },
-  });
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.hello}>Hi {user?.name?.split(' ')[0]}</Text>
-          <Text style={styles.title}>Your projects</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.path}>~/projects</Text>
+          <Text style={styles.title}>your projects [{projects.length}]</Text>
         </View>
         <View style={styles.headerActions}>
-          <Pressable
-            style={styles.iconBtn}
+          <TuiButton
+            label="search"
+            compact
+            variant="ghost"
             onPress={() => router.push('/search')}
-          >
-            <Text style={styles.iconBtnText}>Search</Text>
-          </Pressable>
-          <Pressable
-            style={styles.iconBtn}
+          />
+          <TuiButton
+            label={unread > 0 ? `alerts (${unread})` : 'alerts'}
+            compact
+            variant={unread > 0 ? 'primary' : 'ghost'}
             onPress={() => router.push('/notifications')}
-          >
-            <Text style={styles.iconBtnText}>Bell</Text>
-            {unread > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {unread > 99 ? '99+' : unread}
-                </Text>
-              </View>
-            )}
-          </Pressable>
-          <Pressable
-            style={styles.iconBtn}
+          />
+          <TuiButton
+            label={user ? `@${user.username}` : 'profile'}
+            compact
+            variant="ghost"
             onPress={() => router.push('/profile')}
-          >
-            <Text style={styles.iconBtnText}>
-              {user ? `@${user.username}` : 'Profile'}
-            </Text>
-          </Pressable>
-          <Pressable onPress={() => logout()} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Log out</Text>
-          </Pressable>
+          />
+          <TuiButton
+            label="exit"
+            compact
+            variant="danger"
+            onPress={() => logout()}
+          />
         </View>
       </View>
 
@@ -278,10 +141,10 @@ export default function Projects() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No projects yet</Text>
+            <Text style={styles.emptyTitle}>no projects found</Text>
             <Text style={styles.emptyText}>
-              Create your first project to start planning with Kanban boards,
-              timelines, and calendars.
+              press [ + new project ] to create your first board, timeline and
+              calendar
             </Text>
           </View>
         }
@@ -290,67 +153,212 @@ export default function Projects() {
             style={styles.projectCard}
             onPress={() => openProject(item)}
           >
-            <View style={styles.projectRow}>
-              <Avatar name={item.name} size={44} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.projectName}>{item.name}</Text>
-                <Text style={styles.projectDesc} numberOfLines={1}>
-                  {item.description || 'No description'}
-                </Text>
-              </View>
-              {item.role && (
-                <View style={styles.roleBadge}>
-                  <Text style={styles.roleText}>{item.role}</Text>
-                </View>
-              )}
+            <Avatar name={item.name} size={36} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.projectName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Text style={styles.projectDesc} numberOfLines={1}>
+                {item.description || 'no description'}
+              </Text>
             </View>
+            {item.role && (
+              <Text style={styles.roleBadge}>[{item.role.toUpperCase()}]</Text>
+            )}
+            <Text style={styles.openMark}>▸</Text>
           </Pressable>
         )}
       />
 
+      <StatusBar
+        segments={[
+          { text: projects.length ? `${projects.length} projects` : 'empty' },
+          { text: unread ? `${unread} unread` : 'all read', color: unread ? colors.warning : colors.success },
+          { text: user ? `@${user.username}` : 'guest', color: colors.primary, bold: true },
+        ]}
+      />
+
       <Pressable style={styles.fab} onPress={() => setModalOpen(true)}>
-        <Text style={styles.fabText}>+ New project</Text>
+        <Text style={styles.fabText}>[ + new project ]</Text>
       </Pressable>
 
       <Modal visible={modalOpen} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>New project</Text>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalFrame}>┌─ new project ──────────</Text>
             <TextInput
               style={styles.input}
-              placeholder="Project name"
+              placeholder="project name"
               placeholderTextColor={colors.textMuted}
               value={name}
               onChangeText={setName}
             />
             <TextInput
               style={[styles.input, { height: 80 }]}
-              placeholder="Description (optional)"
+              placeholder="description (optional)"
               placeholderTextColor={colors.textMuted}
               value={description}
               onChangeText={setDescription}
               multiline
             />
             <View style={styles.modalActions}>
-              <Pressable
+              <TuiButton
+                label="cancel"
+                compact
+                variant="ghost"
                 onPress={() => setModalOpen(false)}
-                style={styles.btnGhost}
-              >
-                <Text style={styles.btnGhostText}>Cancel</Text>
-              </Pressable>
-              <Pressable
+              />
+              <TuiButton
+                label={busy ? '...' : 'create'}
+                compact
+                variant="primary"
                 onPress={createProject}
-                style={[styles.btnPrimary, busy && { opacity: 0.6 }]}
-                disabled={busy}
-              >
-                <Text style={styles.btnPrimaryText}>
-                  {busy ? 'Creating…' : 'Create'}
-                </Text>
-              </Pressable>
+                disabled={busy || !name.trim()}
+              />
             </View>
+            <Text style={styles.modalFrame}>└─────────────────────────</Text>
           </View>
         </View>
       </Modal>
     </View>
   );
+}
+
+function makeStyles(colors: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg },
+    header: {
+      paddingTop: spacing.xl,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.line,
+    },
+    path: {
+      fontFamily: font.mono,
+      color: colors.primary,
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    title: {
+      fontFamily: font.mono,
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.text,
+      textTransform: 'uppercase',
+    },
+    headerActions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      justifyContent: 'flex-end',
+    },
+    projectCard: {
+      backgroundColor: colors.card,
+      borderRadius: 0,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.line,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    projectName: {
+      fontFamily: font.mono,
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+      textTransform: 'uppercase',
+    },
+    projectDesc: {
+      fontFamily: font.mono,
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    roleBadge: {
+      fontFamily: font.mono,
+      fontSize: 10,
+      fontWeight: '800',
+      color: colors.primary,
+      letterSpacing: 1,
+    },
+    openMark: { fontFamily: font.mono, color: colors.textMuted, fontSize: 14 },
+    empty: { alignItems: 'center', paddingTop: 64, paddingHorizontal: spacing.lg },
+    emptyTitle: {
+      fontFamily: font.mono,
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+    },
+    emptyText: {
+      fontFamily: font.mono,
+      textAlign: 'center',
+      color: colors.textMuted,
+      marginTop: spacing.sm,
+      fontSize: 12,
+      lineHeight: 18,
+    },
+    fab: {
+      position: 'absolute',
+      bottom: 56,
+      right: spacing.lg,
+      backgroundColor: colors.bg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+      borderRadius: 0,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    fabText: {
+      fontFamily: font.mono,
+      color: colors.primary,
+      fontWeight: '800',
+      fontSize: 13,
+    },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(15,23,42,0.45)',
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    modalBox: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      padding: spacing.lg,
+      maxWidth: 440,
+      width: '100%',
+      alignSelf: 'center',
+    },
+    modalFrame: {
+      fontFamily: font.mono,
+      fontSize: 11,
+      color: colors.line,
+      marginBottom: spacing.sm,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.line,
+      borderRadius: 0,
+      padding: spacing.md,
+      fontFamily: font.mono,
+      fontSize: 14,
+      color: colors.text,
+      marginBottom: spacing.sm,
+      backgroundColor: colors.bg,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+  });
 }
