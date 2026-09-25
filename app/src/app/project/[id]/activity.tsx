@@ -11,7 +11,7 @@ import {
 import { api } from '../../../api/client';
 import type { ActivityItem } from '../../../api/types';
 import { useTheme } from '../../../theme/Theme';
-import { radius, spacing } from '../../../theme';
+import { font, spacing } from '../../../theme';
 
 export default function ActivityScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -69,31 +69,55 @@ export default function ActivityScreen() {
       marginTop: spacing.sm,
       padding: spacing.md,
       backgroundColor: colors.card,
-      borderRadius: radius.md,
+      borderRadius: 0,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.line,
     },
-    summary: { color: colors.text, fontSize: 14, fontWeight: '600' },
-    meta: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
+    summary: {
+      fontFamily: font.mono,
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    meta: {
+      fontFamily: font.mono,
+      color: colors.textMuted,
+      fontSize: 10,
+      marginTop: 6,
+      letterSpacing: 1,
+    },
     emptyBox: { alignItems: 'center', marginTop: 48, paddingHorizontal: spacing.lg },
-    emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-    emptyHint: {
+    emptyTitle: {
+      fontFamily: font.mono,
+      fontSize: 14,
+      fontWeight: '700',
       color: colors.textSecondary,
+      textTransform: 'uppercase',
+    },
+    emptyHint: {
+      fontFamily: font.mono,
+      color: colors.textMuted,
       textAlign: 'center',
       marginTop: spacing.sm,
-      fontSize: 13,
-      lineHeight: 19,
+      fontSize: 11,
+      lineHeight: 17,
     },
     loadMore: {
       margin: spacing.md,
       padding: spacing.md,
-      borderRadius: radius.md,
+      borderRadius: 0,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.line,
       backgroundColor: colors.card,
       alignItems: 'center',
     },
-    loadMoreText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+    loadMoreText: {
+      fontFamily: font.mono,
+      color: colors.primary,
+      fontWeight: '700',
+      fontSize: 13,
+      letterSpacing: 1,
+    },
   });
 
   if (!items) {
@@ -112,10 +136,9 @@ export default function ActivityScreen() {
         contentContainerStyle={{ paddingBottom: spacing.lg }}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyTitle}>No activity yet</Text>
+            <Text style={styles.emptyTitle}>no activity yet</Text>
             <Text style={styles.emptyHint}>
-              Task moves, comments, and edits will appear here as your team
-              works.
+              task moves, comments and edits stream here as your team works
             </Text>
           </View>
         }
@@ -123,7 +146,7 @@ export default function ActivityScreen() {
           hasMore ? (
             <Pressable style={styles.loadMore} onPress={() => void loadMore()}>
               <Text style={styles.loadMoreText}>
-                {loadingMore ? 'Loading…' : 'Load more'}
+                {loadingMore ? '[ ... ]' : '[ load more ]'}
               </Text>
             </Pressable>
           ) : null
