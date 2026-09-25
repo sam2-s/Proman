@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { api } from '../../../api/client';
 import type { Card } from '../../../api/types';
-import { radius, spacing } from '../../../theme';
+import { font, spacing } from '../../../theme';
 import { useTheme } from '../../../theme/Theme';
 
 function parseDate(s: string | null): Date | null {
@@ -96,7 +96,7 @@ export default function TimelineScreen() {
     >
       <View>
         <View style={styles.leftCol}>
-          <Text style={styles.headerLeft}>Task</Text>
+          <Text style={styles.headerLeft}>── task</Text>
           {rows.map(({ card }) => (
             <View key={card.id} style={styles.labelRow}>
               <Text style={styles.labelText} numberOfLines={1}>
@@ -154,9 +154,9 @@ export default function TimelineScreen() {
             })}
             {rows.length === 0 && (
               <View style={styles.emptyWrap}>
-                <Text style={styles.empty}>No dated tasks yet</Text>
+                <Text style={styles.empty}>no dated tasks yet</Text>
                 <Text style={styles.emptyHint}>
-                  Add start/due dates on a task to see it on the timeline.
+                  set start/due dates on a task to plot it here
                 </Text>
               </View>
             )}
@@ -179,20 +179,22 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   leftCol: { width: 180 },
   headerLeft: {
     height: 32,
-    fontWeight: '800',
+    fontFamily: font.mono,
+    fontWeight: '700',
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: 11,
+    letterSpacing: 1,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    justifyContent: 'center',
   },
   labelRow: {
     height: 40,
     justifyContent: 'center',
     paddingRight: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.line,
   },
-  labelText: { fontSize: 13, fontWeight: '600', color: colors.text },
+  labelText: { fontFamily: font.mono, fontSize: 12, fontWeight: '600', color: colors.text },
   chartCol: { width: 720 },
   tickRow: {
     height: 32,
@@ -200,31 +202,31 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  tick: { fontSize: 10, color: colors.textMuted },
+  tick: { fontFamily: font.mono, fontSize: 10, color: colors.textMuted },
   tracks: {
     position: 'relative',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.line,
     overflow: 'hidden',
   },
   trackRow: {
     height: 40,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.line,
     position: 'relative',
   },
   bar: {
     position: 'absolute',
     top: 8,
     height: 24,
-    borderRadius: radius.full,
+    borderRadius: 0,
     justifyContent: 'center',
     paddingHorizontal: 8,
     minWidth: 24,
   },
-  barText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  barText: { fontFamily: font.mono, color: '#fff', fontSize: 10, fontWeight: '700' },
   todayLine: {
     position: 'absolute',
     top: 0,
@@ -235,7 +237,7 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     zIndex: 2,
   },
   emptyWrap: { padding: spacing.lg },
-  empty: { fontWeight: '700', color: colors.text },
-  emptyHint: { color: colors.textSecondary, marginTop: 4, fontSize: 13 },
+  empty: { fontFamily: font.mono, fontWeight: '700', color: colors.text, textTransform: 'uppercase' },
+  emptyHint: { fontFamily: font.mono, color: colors.textMuted, marginTop: 4, fontSize: 11 },
 });
 }
