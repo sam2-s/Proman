@@ -121,7 +121,7 @@ pub async fn detail(
     .ok_or_else(|| ApiError::NotFound("project not found".into()))?;
 
     let members = sqlx::query_as::<_, Member>(
-        r#"SELECT m.project_id, m.user_id, m.role, u.name, u.email
+        r#"SELECT m.project_id, m.user_id, m.role, u.name, u.username, u.avatar_url
            FROM project_members m JOIN users u ON u.id = m.user_id
            WHERE m.project_id = ?"#,
     )
@@ -163,7 +163,7 @@ pub async fn remove(
 
 #[derive(Debug, Deserialize)]
 pub struct AddMember {
-    pub email: String,
+    pub username: String,
     #[serde(default = "default_role")]
     pub role: String,
 }
@@ -186,11 +186,13 @@ pub async fn add_member(
         return Err(ApiError::BadRequest("invalid role".into()));
     }
 
-    let target = sqlx::query("SELECT id, name, email FROM users WHERE email = ? COLLATE NOCASE")
-        .bind(req.email.trim())
-        .fetch_optional(&state.db)
-        .await?
-        .ok_or_else(|| ApiError::NotFound("no user with that email".into()))?;
+    let target = sqlx::query(
+        "SELECT id, name, username, avatar_url FROM users WHERE username = ? COLLATE NOCASE",
+    )
+    .bind(req.username.trim())
+    .fetch_optional(&state.db)
+    .await?
+    .ok_or_else(|| ApiError::NotFound("no user with that username".into()))?;
 
     let target_id: i64 = target.get("id");
 
@@ -208,7 +210,8 @@ pub async fn add_member(
         user_id: target_id,
         role: req.role,
         name: target.get("name"),
-        email: target.get("email"),
+        username: target.get("username"),
+        avatar_url: target.get("avatar_url"),
     };
     Ok((StatusCode::CREATED, Json(member)))
 }

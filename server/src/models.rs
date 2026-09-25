@@ -26,7 +26,8 @@ pub struct Member {
     pub user_id: i64,
     pub role: String,
     pub name: String,
-    pub email: String,
+    pub username: String,
+    pub avatar_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, sqlx::FromRow)]

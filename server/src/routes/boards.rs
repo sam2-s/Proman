@@ -124,7 +124,7 @@ pub async fn detail(
     }
 
     let members = sqlx::query(
-        r#"SELECT m.user_id, u.name, u.email, m.role
+        r#"SELECT m.user_id, u.name, u.username, u.avatar_url, m.role
            FROM project_members m JOIN users u ON u.id = m.user_id
            WHERE m.project_id = ?"#,
     )
@@ -137,7 +137,8 @@ pub async fn detail(
             serde_json::json!({
                 "user_id": r.get::<i64, _>("user_id"),
                 "name": r.get::<String, _>("name"),
-                "email": r.get::<String, _>("email"),
+                "username": r.get::<String, _>("username"),
+                "avatar_url": r.get::<Option<String>, _>("avatar_url"),
                 "role": r.get::<String, _>("role"),
             })
         })
