@@ -8,7 +8,8 @@
     "dev:app": "npm run start --workspace=app",
     "dev:web": "npm run web --workspace=app",
     "typecheck": "npm run typecheck --workspace=app",
-    "check": "cd server && cargo check && cd ../app && npx tsc --noEmit"
+    "check": "cd server && cargo check && cd ../app && npx tsc --noEmit",
+    "lint": "npm run lint --workspace=app"
   },
   "engines": {
     "node": ">=20"
