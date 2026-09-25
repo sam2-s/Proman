@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -17,17 +18,38 @@ export default function ActivityScreen() {
   const projectId = Number(id);
   const colors = useTheme();
   const [items, setItems] = useState<ActivityItem[] | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  const PAGE_SIZE = 20;
 
   const load = useCallback(async () => {
     try {
       const data = await api.get<ActivityItem[]>(
-        `/api/projects/${projectId}/activity`,
+        `/api/projects/${projectId}/activity?limit=${PAGE_SIZE}`,
       );
       setItems(data);
+      setHasMore(data.length === PAGE_SIZE);
     } catch {
       setItems([]);
     }
   }, [projectId]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || items === null) return;
+    setLoadingMore(true);
+    try {
+      const data = await api.get<ActivityItem[]>(
+        `/api/projects/${projectId}/activity?limit=${PAGE_SIZE}&offset=${items.length}`,
+      );
+      setItems((prev) => [...(prev ?? []), ...data]);
+      setHasMore(data.length === PAGE_SIZE);
+    } catch {
+      // keep what we have
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [hasMore, items, loadingMore, projectId]);
 
   useEffect(() => {
     void load();
@@ -53,6 +75,16 @@ export default function ActivityScreen() {
     summary: { color: colors.text, fontSize: 14, fontWeight: '600' },
     meta: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
     empty: { color: colors.textMuted, textAlign: 'center', marginTop: 40 },
+    loadMore: {
+      margin: spacing.md,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+    },
+    loadMoreText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
   });
 
   if (!items) {
@@ -71,6 +103,15 @@ export default function ActivityScreen() {
         contentContainerStyle={{ paddingBottom: spacing.lg }}
         ListEmptyComponent={
           <Text style={styles.empty}>No activity yet</Text>
+        }
+        ListFooterComponent={
+          hasMore ? (
+            <Pressable style={styles.loadMore} onPress={() => void loadMore()}>
+              <Text style={styles.loadMoreText}>
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </Text>
+            </Pressable>
+          ) : null
         }
         renderItem={({ item }) => (
           <View style={styles.row}>

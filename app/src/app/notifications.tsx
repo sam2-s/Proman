@@ -18,17 +18,40 @@ export default function NotificationsScreen() {
   const colors = useTheme();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  const PAGE_SIZE = 20;
 
   const load = useCallback(async () => {
     try {
-      const data = await api.get<NotificationItem[]>('/api/notifications');
+      const data = await api.get<NotificationItem[]>(
+        `/api/notifications?limit=${PAGE_SIZE}`,
+      );
       setItems(data);
+      setHasMore(data.length === PAGE_SIZE);
     } catch (e) {
       Alert.alert('Error', e instanceof Error ? e.message : 'Failed');
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const data = await api.get<NotificationItem[]>(
+        `/api/notifications?limit=${PAGE_SIZE}&offset=${items.length}`,
+      );
+      setItems((prev) => [...prev, ...data]);
+      setHasMore(data.length === PAGE_SIZE);
+    } catch {
+      // keep what we have
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [hasMore, items.length, loadingMore]);
 
   useEffect(() => {
     void load();
@@ -86,6 +109,22 @@ export default function NotificationsScreen() {
     body: { color: colors.text, fontSize: 14, fontWeight: '600' },
     time: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
     empty: { color: colors.textMuted, textAlign: 'center', marginTop: 40 },
+    loadMore: {
+      margin: spacing.md,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+    },
+    loadMoreText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+    allLoaded: {
+      color: colors.textMuted,
+      textAlign: 'center',
+      fontSize: 12,
+      marginVertical: spacing.md,
+    },
   });
 
   if (loading) {
@@ -108,6 +147,17 @@ export default function NotificationsScreen() {
         data={items}
         keyExtractor={(n) => String(n.id)}
         ListEmptyComponent={<Text style={styles.empty}>You're all caught up</Text>}
+        ListFooterComponent={
+          hasMore ? (
+            <Pressable style={styles.loadMore} onPress={() => void loadMore()}>
+              <Text style={styles.loadMoreText}>
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </Text>
+            </Pressable>
+          ) : items.length > 0 ? (
+            <Text style={styles.allLoaded}>End of notifications</Text>
+          ) : null
+        }
         renderItem={({ item }) => (
           <Pressable
             style={[styles.row, item.read === 0 && styles.rowUnread]}

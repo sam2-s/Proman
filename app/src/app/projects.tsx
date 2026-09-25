@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
@@ -25,6 +25,24 @@ export default function Projects() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [busy, setBusy] = useState(false);
+  const [unread, setUnread] = useState(0);
+
+  const loadUnread = useCallback(async () => {
+    try {
+      const data = await api.get<{ count: number }>(
+        '/api/notifications/unread-count',
+      );
+      setUnread(data.count);
+    } catch {
+      // ignore; badge stays at last known value
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadUnread();
+    }, [loadUnread]),
+  );
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -97,8 +115,22 @@ export default function Projects() {
       backgroundColor: colors.bg,
       borderWidth: 1,
       borderColor: colors.border,
+      position: 'relative',
     },
     iconBtnText: { color: colors.text, fontWeight: '700', fontSize: 12 },
+    badge: {
+      position: 'absolute',
+      top: -7,
+      right: -7,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      paddingHorizontal: 4,
+      backgroundColor: colors.danger,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
     logoutBtn: {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
@@ -222,6 +254,13 @@ export default function Projects() {
             onPress={() => router.push('/notifications')}
           >
             <Text style={styles.iconBtnText}>Bell</Text>
+            {unread > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unread > 99 ? '99+' : unread}
+                </Text>
+              </View>
+            )}
           </Pressable>
           <Pressable onPress={() => logout()} style={styles.logoutBtn}>
             <Text style={styles.logoutText}>Log out</Text>
