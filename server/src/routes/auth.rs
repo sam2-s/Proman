@@ -8,14 +8,51 @@ use crate::error::{ApiError, ApiResult};
 use crate::models::{AuthResponse, LoginReq, RegisterReq, User};
 use crate::state::SharedState;
 
+const USER_COLS: &str = "id, username, name, avatar_url, is_admin, created_at";
+
+fn user_from_row(row: &sqlx::sqlite::SqliteRow) -> User {
+    User {
+        id: row.get("id"),
+        username: row.get("username"),
+        name: row.get("name"),
+        avatar_url: row.get("avatar_url"),
+        is_admin: row.get("is_admin"),
+        created_at: row.get("created_at"),
+    }
+}
+
+/// Normalize + validate a username: 3-32 chars, lowercase letters,
+/// digits, `_` and `-`, starting with a letter or digit.
+fn normalize_username(raw: &str) -> ApiResult<String> {
+    let username = raw.trim().to_lowercase();
+    if username.len() < 3 || username.len() > 32 {
+        return Err(ApiError::BadRequest(
+            "username must be 3-32 characters".into(),
+        ));
+    }
+    let mut chars = username.chars();
+    let first = chars.next().expect("non-empty after length check");
+    if !first.is_ascii_alphanumeric() {
+        return Err(ApiError::BadRequest(
+            "username must start with a letter or digit".into(),
+        ));
+    }
+    if !username
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-')
+    {
+        return Err(ApiError::BadRequest(
+            "username may only contain letters, digits, _ and -".into(),
+        ));
+    }
+    Ok(username)
+}
+
 pub async fn register(
     State(state): State<SharedState>,
     Json(req): Json<RegisterReq>,
 ) -> ApiResult<(axum::http::StatusCode, Json<AuthResponse>)> {
-    let email = req.email.trim().to_lowercase();
-    if email.is_empty() || !email.contains('@') {
-        return Err(ApiError::BadRequest("valid email required".into()));
-    }
+    let username = normalize_username(&req.username)?;
     if req.password.len() < 8 {
         return Err(ApiError::BadRequest(
             "password must be at least 8 characters".into(),
@@ -25,30 +62,29 @@ pub async fn register(
         return Err(ApiError::BadRequest("name required".into()));
     }
 
-    let exists = sqlx::query("SELECT 1 FROM users WHERE email = ?")
-        .bind(&email)
+    let exists = sqlx::query("SELECT 1 FROM users WHERE username = ?")
+        .bind(&username)
         .fetch_optional(&state.db)
         .await?;
     if exists.is_some() {
-        return Err(ApiError::Conflict("email already registered".into()));
+        return Err(ApiError::Conflict("username already taken".into()));
     }
 
     let hash = auth::hash_password(&req.password)?;
-    let row = sqlx::query(
-        "INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?) RETURNING id, email, name, created_at",
-    )
-    .bind(&email)
+    // The email column stays for legacy schema reasons but is never used,
+    // shown, or returned — accounts are username-only.
+    let row = sqlx::query(&format!(
+        "INSERT INTO users (email, username, password_hash, name) \
+         VALUES (?, ?, ?, ?) RETURNING {USER_COLS}"
+    ))
+    .bind(format!("{username}@users.proman"))
+    .bind(&username)
     .bind(&hash)
     .bind(req.name.trim())
     .fetch_one(&state.db)
     .await?;
 
-    let user = User {
-        id: row.get("id"),
-        email: row.get("email"),
-        name: row.get("name"),
-        created_at: row.get("created_at"),
-    };
+    let user = user_from_row(&row);
     let token = auth::issue_token(user.id)?;
 
     Ok((
@@ -61,12 +97,13 @@ pub async fn login(
     State(state): State<SharedState>,
     Json(req): Json<LoginReq>,
 ) -> ApiResult<Json<AuthResponse>> {
-    let email = req.email.trim().to_lowercase();
-    let row =
-        sqlx::query("SELECT id, email, password_hash, name, created_at FROM users WHERE email = ?")
-            .bind(&email)
-            .fetch_optional(&state.db)
-            .await?;
+    let username = req.username.trim().to_lowercase();
+    let row = sqlx::query(&format!(
+        "SELECT {USER_COLS}, password_hash FROM users WHERE username = ?"
+    ))
+    .bind(&username)
+    .fetch_optional(&state.db)
+    .await?;
 
     let row = row.ok_or_else(|| ApiError::Unauthorized("invalid credentials".into()))?;
     let hash: String = row.get("password_hash");
@@ -74,12 +111,7 @@ pub async fn login(
         return Err(ApiError::Unauthorized("invalid credentials".into()));
     }
 
-    let user = User {
-        id: row.get("id"),
-        email: row.get("email"),
-        name: row.get("name"),
-        created_at: row.get("created_at"),
-    };
+    let user = user_from_row(&row);
     let token = auth::issue_token(user.id)?;
     Ok(Json(AuthResponse { token, user }))
 }
@@ -88,7 +120,7 @@ pub async fn me(
     State(state): State<SharedState>,
     AuthUser(user_id): AuthUser,
 ) -> ApiResult<Json<Value>> {
-    let row = sqlx::query("SELECT id, email, name, created_at FROM users WHERE id = ?")
+    let row = sqlx::query(&format!("SELECT {USER_COLS} FROM users WHERE id = ?"))
         .bind(user_id)
         .fetch_optional(&state.db)
         .await?
@@ -96,8 +128,10 @@ pub async fn me(
 
     Ok(Json(serde_json::json!({
         "id": row.get::<i64, _>("id"),
-        "email": row.get::<String, _>("email"),
+        "username": row.get::<String, _>("username"),
         "name": row.get::<String, _>("name"),
+        "avatar_url": row.get::<Option<String>, _>("avatar_url"),
+        "is_admin": row.get::<bool, _>("is_admin"),
         "created_at": row.get::<String, _>("created_at"),
     })))
 }

@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct User {
     pub id: i64,
-    pub email: String,
+    pub username: String,
     pub name: String,
+    pub avatar_url: Option<String>,
+    pub is_admin: bool,
     pub created_at: String,
 }
 
@@ -160,14 +162,14 @@ pub struct Notification {
 
 #[derive(Debug, Deserialize)]
 pub struct RegisterReq {
-    pub email: String,
+    pub username: String,
     pub password: String,
     pub name: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct LoginReq {
-    pub email: String,
+    pub username: String,
     pub password: String,
 }
 
