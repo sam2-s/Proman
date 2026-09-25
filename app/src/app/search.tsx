@@ -12,7 +12,7 @@ import {
 import { api } from '../api/client';
 import type { SearchResult } from '../api/types';
 import { useTheme } from '../theme/Theme';
-import { radius, spacing } from '../theme';
+import { font, spacing } from '../theme';
 
 export default function SearchScreen() {
   const colors = useTheme();
@@ -48,31 +48,49 @@ export default function SearchScreen() {
     input: {
       backgroundColor: colors.card,
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radius.md,
+      borderColor: colors.primary,
+      borderRadius: 0,
       paddingHorizontal: spacing.md,
       paddingVertical: 12,
       color: colors.text,
-      fontSize: 15,
+      fontFamily: font.mono,
+      fontSize: 14,
     },
     row: {
       backgroundColor: colors.card,
-      borderRadius: radius.md,
+      borderRadius: 0,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.line,
       padding: spacing.md,
       marginTop: spacing.sm,
     },
-    title: { fontWeight: '700', color: colors.text, fontSize: 15 },
-    meta: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+    title: {
+      fontFamily: font.mono,
+      fontWeight: '700',
+      color: colors.text,
+      fontSize: 13,
+    },
+    meta: {
+      fontFamily: font.mono,
+      color: colors.textMuted,
+      fontSize: 11,
+      marginTop: 4,
+    },
     emptyBox: { alignItems: 'center', marginTop: 48, paddingHorizontal: spacing.lg },
-    emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-    emptyHint: {
+    emptyTitle: {
+      fontFamily: font.mono,
+      fontSize: 14,
+      fontWeight: '700',
       color: colors.textSecondary,
+      textTransform: 'uppercase',
+    },
+    emptyHint: {
+      fontFamily: font.mono,
+      color: colors.textMuted,
       textAlign: 'center',
       marginTop: spacing.sm,
-      fontSize: 13,
-      lineHeight: 19,
+      fontSize: 11,
+      lineHeight: 17,
     },
     center: {
       flex: 1,
@@ -94,7 +112,7 @@ export default function SearchScreen() {
     <View style={styles.container}>
       <TextInput
         style={styles.input}
-        placeholder="Search tasks…"
+        placeholder="search tasks…"
         placeholderTextColor={colors.textMuted}
         value={q}
         onChangeText={setQ}
@@ -107,18 +125,17 @@ export default function SearchScreen() {
         ListEmptyComponent={
           q.trim() ? (
             <View style={styles.emptyBox}>
-              <Text style={styles.emptyTitle}>No matching tasks</Text>
+              <Text style={styles.emptyTitle}>no matching tasks</Text>
               <Text style={styles.emptyHint}>
-                Try a different keyword — search covers task titles and
-                descriptions across your projects.
+                try another keyword — search covers titles and descriptions
+                across your projects
               </Text>
             </View>
           ) : (
             <View style={styles.emptyBox}>
-              <Text style={styles.emptyTitle}>Search tasks</Text>
+              <Text style={styles.emptyTitle}>type to search</Text>
               <Text style={styles.emptyHint}>
-                Start typing to find tasks by title or description across all
-                of your projects.
+                grep task titles and descriptions across all of your projects
               </Text>
             </View>
           )
