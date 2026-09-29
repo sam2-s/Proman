@@ -28,6 +28,12 @@ import { useTheme } from '../../theme/Theme';
 import { useAuth } from '../../context/auth';
 import { Avatar } from '../../components/Avatar';
 
+function isValidDate(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(s);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+
 export default function TaskScreen() {
   const colors = useTheme();
   const styles = makeStyles(colors);
@@ -44,6 +50,8 @@ export default function TaskScreen() {
 
   const [newSubtask, setNewSubtask] = useState('');
   const [newComment, setNewComment] = useState('');
+  const [startDateError, setStartDateError] = useState<string | null>(null);
+  const [dueDateError, setDueDateError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -345,26 +353,60 @@ export default function TaskScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>Start date</Text>
             <TextInput
-              style={styles.dateInput}
+              style={[styles.dateInput, !!startDateError && styles.dateInputError]}
               value={card.start_date ?? ''}
               editable={canEdit}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.textMuted}
-              onChangeText={(t) => setCard({ ...card, start_date: t || null })}
-              onBlur={() => patchCard({ start_date: card.start_date || null })}
+              onChangeText={(t) => {
+                setCard({ ...card, start_date: t || null });
+                if (t && !isValidDate(t)) {
+                  setStartDateError('use YYYY-MM-DD');
+                } else {
+                  setStartDateError(null);
+                }
+              }}
+              onBlur={() => {
+                if (card.start_date && !isValidDate(card.start_date)) {
+                  setCard({ ...card, start_date: null });
+                  setStartDateError(null);
+                  return;
+                }
+                patchCard({ start_date: card.start_date || null });
+              }}
             />
+            {startDateError ? (
+              <Text style={styles.dateError}>{startDateError}</Text>
+            ) : null}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>Due date</Text>
             <TextInput
-              style={styles.dateInput}
+              style={[styles.dateInput, !!dueDateError && styles.dateInputError]}
               value={card.due_date ?? ''}
               editable={canEdit}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.textMuted}
-              onChangeText={(t) => setCard({ ...card, due_date: t || null })}
-              onBlur={() => patchCard({ due_date: card.due_date || null })}
+              onChangeText={(t) => {
+                setCard({ ...card, due_date: t || null });
+                if (t && !isValidDate(t)) {
+                  setDueDateError('use YYYY-MM-DD');
+                } else {
+                  setDueDateError(null);
+                }
+              }}
+              onBlur={() => {
+                if (card.due_date && !isValidDate(card.due_date)) {
+                  setCard({ ...card, due_date: null });
+                  setDueDateError(null);
+                  return;
+                }
+                patchCard({ due_date: card.due_date || null });
+              }}
             />
+            {dueDateError ? (
+              <Text style={styles.dateError}>{dueDateError}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -560,6 +602,15 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     color: colors.text,
     fontFamily: font.mono,
     fontSize: 13,
+  },
+  dateInputError: {
+    borderColor: colors.danger,
+  },
+  dateError: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    color: colors.danger,
+    marginTop: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
