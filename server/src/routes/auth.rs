@@ -5,7 +5,7 @@ use sqlx::Row;
 
 use crate::auth::{self, AuthUser};
 use crate::error::{ApiError, ApiResult};
-use crate::models::{AuthResponse, LoginReq, RegisterReq, User};
+use crate::models::{AuthResponse, ChangePasswordReq, LoginReq, RegisterReq, User};
 use crate::state::SharedState;
 
 const USER_COLS: &str = "id, username, name, avatar_url, is_admin, created_at";
@@ -114,6 +114,36 @@ pub async fn login(
     let user = user_from_row(&row);
     let token = auth::issue_token(user.id)?;
     Ok(Json(AuthResponse { token, user }))
+}
+
+pub async fn change_password(
+    State(state): State<SharedState>,
+    AuthUser(user_id): AuthUser,
+    Json(req): Json<ChangePasswordReq>,
+) -> ApiResult<Json<Value>> {
+    if req.new_password.len() < 8 {
+        return Err(ApiError::BadRequest(
+            "new password must be at least 8 characters".into(),
+        ));
+    }
+    let row = sqlx::query("SELECT password_hash FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_optional(&state.db)
+        .await?
+        .ok_or_else(|| ApiError::NotFound("user not found".into()))?;
+    let hash: String = row.get("password_hash");
+    if !auth::verify_password(&req.current_password, &hash) {
+        return Err(ApiError::Unauthorized(
+            "current password is incorrect".into(),
+        ));
+    }
+    let new_hash = auth::hash_password(&req.new_password)?;
+    sqlx::query("UPDATE users SET password_hash = ? WHERE id = ?")
+        .bind(&new_hash)
+        .bind(user_id)
+        .execute(&state.db)
+        .await?;
+    Ok(Json(serde_json::json!({ "ok": true })))
 }
 
 pub async fn me(

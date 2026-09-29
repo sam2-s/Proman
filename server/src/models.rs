@@ -174,6 +174,12 @@ pub struct LoginReq {
     pub password: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ChangePasswordReq {
+    pub current_password: String,
+    pub new_password: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct AuthResponse {
     pub token: String,
