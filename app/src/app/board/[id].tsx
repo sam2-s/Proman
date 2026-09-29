@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import * as Sharing from 'expo-sharing';
 import { Loading } from '../../components/Tui';
 import { api } from '../../api/client';
 import type { Card } from '../../api/types';
@@ -178,6 +180,35 @@ export default function BoardScreen() {
     return data?.members?.find((m) => m.user_id === id)?.name ?? null;
   };
 
+  async function exportProject() {
+    if (!projectId) return;
+    try {
+      const dump = await api.get<unknown>(
+        `/api/projects/${projectId}/export`,
+      );
+      const json = JSON.stringify(dump, null, 2);
+      if (Platform.OS === 'web') {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `project-${projectId}-export.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(`data:application/json;base64,${btoa(json)}`, {
+            mimeType: 'application/json',
+            dialogTitle: 'Export project',
+          });
+        }
+      }
+    } catch (e) {
+      Alert.alert('Export failed', e instanceof Error ? e.message : '');
+    }
+  }
+
   const dragCard: Card | null = useMemoFindCard(data, dd.activeCardId);
 
   if (loading) {
@@ -243,6 +274,9 @@ export default function BoardScreen() {
             onPress={() => router.push(`/project/${projectId}/members`)}
           >
             <Text style={styles.toolBtnText}>[ team ]</Text>
+          </Pressable>
+          <Pressable style={styles.toolBtn} onPress={exportProject}>
+            <Text style={styles.toolBtnText}>[ export ]</Text>
           </Pressable>
           {canEdit && (
             <Pressable
