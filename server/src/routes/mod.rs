@@ -18,7 +18,7 @@ pub fn router(state: SharedState) -> Router {
         .route("/api/health", get(health))
         .route("/api/auth/register", post(auth::register))
         .route("/api/auth/login", post(auth::login))
-        .route("/api/me", get(auth::me))
+        .route("/api/me", get(auth::me).delete(auth::delete_me))
         .route("/api/me/password", post(auth::change_password))
         .route("/api/me/avatar", post(users::upload_avatar))
         .route("/api/avatars/{id}", get(users::get_avatar))

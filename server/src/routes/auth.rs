@@ -146,6 +146,27 @@ pub async fn change_password(
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
+pub async fn delete_me(
+    State(state): State<SharedState>,
+    AuthUser(user_id): AuthUser,
+    Json(req): Json<LoginReq>,
+) -> ApiResult<axum::http::StatusCode> {
+    let row = sqlx::query("SELECT password_hash FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_optional(&state.db)
+        .await?
+        .ok_or_else(|| ApiError::NotFound("user not found".into()))?;
+    let hash: String = row.get("password_hash");
+    if !auth::verify_password(&req.password, &hash) {
+        return Err(ApiError::Unauthorized("invalid credentials".into()));
+    }
+    sqlx::query("DELETE FROM users WHERE id = ?")
+        .bind(user_id)
+        .execute(&state.db)
+        .await?;
+    Ok(axum::http::StatusCode::NO_CONTENT)
+}
+
 pub async fn me(
     State(state): State<SharedState>,
     AuthUser(user_id): AuthUser,
