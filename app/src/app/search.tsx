@@ -8,40 +8,50 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { EmptyState, Loading } from '../components/Tui';
+import { EmptyState, Loading, TuiButton } from '../components/Tui';
 import { api } from '../api/client';
 import type { SearchResult } from '../api/types';
 import { useTheme } from '../theme/Theme';
 import { font, spacing } from '../theme';
 
+const PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
+
 export default function SearchScreen() {
   const colors = useTheme();
   const [q, setQ] = useState('');
+  const [priority, setPriority] = useState<string | null>(null);
+  const [assignee, setAssignee] = useState<string | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const run = useCallback(async (term: string) => {
-    if (!term.trim()) {
-      setResults([]);
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await api.get<SearchResult[]>(
-        `/api/search?q=${encodeURIComponent(term.trim())}`,
-      );
-      setResults(data);
-    } catch {
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const run = useCallback(
+    async (term: string, prio: string | null, asg: string | null) => {
+      if (!term.trim()) {
+        setResults([]);
+        return;
+      }
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ q: term.trim() });
+        if (prio) params.set('priority', prio);
+        if (asg) params.set('assignee_id', asg);
+        const data = await api.get<SearchResult[]>(
+          `/api/search?${params.toString()}`,
+        );
+        setResults(data);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    const t = setTimeout(() => void run(q), 250);
+    const t = setTimeout(() => void run(q, priority, assignee), 250);
     return () => clearTimeout(t);
-  }, [q, run]);
+  }, [q, priority, assignee, run]);
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.bg, padding: spacing.md },
@@ -55,6 +65,24 @@ export default function SearchScreen() {
       color: colors.text,
       fontFamily: font.mono,
       fontSize: 14,
+    },
+    filterRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+      flexWrap: 'wrap',
+    },
+    assigneeInput: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.line,
+      borderRadius: 0,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 8,
+      color: colors.text,
+      fontFamily: font.mono,
+      fontSize: 12,
     },
     row: {
       backgroundColor: colors.card,
@@ -76,22 +104,6 @@ export default function SearchScreen() {
       fontSize: 11,
       marginTop: 4,
     },
-    emptyBox: { alignItems: 'center', marginTop: 48, paddingHorizontal: spacing.lg },
-    emptyTitle: {
-      fontFamily: font.mono,
-      fontSize: 14,
-      fontWeight: '700',
-      color: colors.textSecondary,
-      textTransform: 'uppercase',
-    },
-    emptyHint: {
-      fontFamily: font.mono,
-      color: colors.textMuted,
-      textAlign: 'center',
-      marginTop: spacing.sm,
-      fontSize: 11,
-      lineHeight: 17,
-    },
     center: {
       flex: 1,
       alignItems: 'center',
@@ -101,9 +113,7 @@ export default function SearchScreen() {
   });
 
   if (loading && !results.length && q) {
-    return (
-      <Loading label="search" />
-    );
+    return <Loading label="search" />;
   }
 
   return (
@@ -117,6 +127,39 @@ export default function SearchScreen() {
         autoFocus
         autoCapitalize="none"
       />
+      <View style={styles.filterRow}>
+        {PRIORITIES.map((p) => (
+          <TuiButton
+            key={p}
+            label={p}
+            compact
+            variant={priority === p ? 'primary' : 'ghost'}
+            onPress={() => setPriority(priority === p ? null : p)}
+          />
+        ))}
+      </View>
+      <View style={styles.filterRow}>
+        <TextInput
+          style={styles.assigneeInput}
+          placeholder="assignee username…"
+          placeholderTextColor={colors.textMuted}
+          value={assignee ?? ''}
+          onChangeText={(t) => setAssignee(t.trim() || null)}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {(priority || assignee) && (
+          <TuiButton
+            label="clear"
+            compact
+            variant="danger"
+            onPress={() => {
+              setPriority(null);
+              setAssignee(null);
+            }}
+          />
+        )}
+      </View>
       <FlatList
         data={results}
         keyExtractor={(item) => String(item.id)}
@@ -124,7 +167,7 @@ export default function SearchScreen() {
           q.trim() ? (
             <EmptyState
               title="no matching tasks"
-              hint="try another keyword — search covers titles and descriptions across your projects"
+              hint="try another keyword or clear filters — search covers titles and descriptions across your projects"
             />
           ) : (
             <EmptyState
