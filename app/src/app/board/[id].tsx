@@ -22,6 +22,8 @@ import { useProjectSocket } from '../../hooks/useProjectSocket';
 import { font, spacing } from '../../theme';
 import { useTheme } from '../../theme/Theme';
 import { DragGhost, TaskCard } from '../../components/TaskCard';
+import { HelpOverlay } from '../../components/HelpOverlay';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 export default function BoardScreen() {
   const colors = useTheme();
@@ -37,6 +39,8 @@ export default function BoardScreen() {
   const [quickTitle, setQuickTitle] = useState('');
   const [editingCol, setEditingCol] = useState<number | null>(null);
   const [editColName, setEditColName] = useState('');
+  const [selected, setSelected] = useState<{ col: number; card: number } | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const dd = useDragDrop();
   const boardRef = useRef<View>(null);
@@ -180,6 +184,61 @@ export default function BoardScreen() {
     return data?.members?.find((m) => m.user_id === id)?.name ?? null;
   };
 
+  useKeyboardShortcuts({
+    '?': () => setHelpOpen((v) => !v),
+    '/': () => router.push('/search'),
+    n: () => {
+      if (canEdit && data?.columns[0]) setQuickAddCol(data.columns[0].column.id);
+    },
+    c: () => {
+      if (canEdit) setAddColumnOpen(true);
+    },
+    Escape: () => {
+      setHelpOpen(false);
+      setAddColumnOpen(false);
+      setQuickAddCol(null);
+      setEditingCol(null);
+      setSelected(null);
+    },
+    j: () => {
+      if (!data) return;
+      setSelected((prev) => {
+        if (!prev) return { col: 0, card: 0 };
+        const next = Math.min(prev.card + 1, data.columns[prev.col].cards.length - 1);
+        return { col: prev.col, card: next };
+      });
+    },
+    k: () => {
+      if (!data) return;
+      setSelected((prev) => {
+        if (!prev) return { col: 0, card: 0 };
+        const next = Math.max(prev.card - 1, 0);
+        return { col: prev.col, card: next };
+      });
+    },
+    h: () => {
+      if (!data) return;
+      setSelected((prev) => {
+        if (!prev) return { col: 0, card: 0 };
+        const next = Math.max(prev.col - 1, 0);
+        return { col: next, card: 0 };
+      });
+    },
+    l: () => {
+      if (!data) return;
+      setSelected((prev) => {
+        if (!prev) return { col: 0, card: 0 };
+        const next = Math.min(prev.col + 1, data.columns.length - 1);
+        return { col: next, card: 0 };
+      });
+    },
+    Enter: () => {
+      if (!data || !selected) return;
+      const card = data.columns[selected.col]?.cards[selected.card];
+      if (card) router.push(`/task/${card.id}`);
+    },
+  });
+
   async function exportProject() {
     if (!projectId) return;
     try {
@@ -277,6 +336,9 @@ export default function BoardScreen() {
           </Pressable>
           <Pressable style={styles.toolBtn} onPress={exportProject}>
             <Text style={styles.toolBtnText}>[ export ]</Text>
+          </Pressable>
+          <Pressable style={styles.toolBtn} onPress={() => setHelpOpen(true)}>
+            <Text style={styles.toolBtnText}>[ ? ]</Text>
           </Pressable>
           {canEdit && (
             <Pressable
@@ -405,6 +467,7 @@ export default function BoardScreen() {
                   onDrop={handleDrop}
                   isDragging={dd.isDragging(card.id)}
                   draggable={canEdit}
+                  selected={selected?.col === colIdx && selected?.card === cardIdx}
                 />
               ))}
             </ScrollView>
@@ -445,6 +508,8 @@ export default function BoardScreen() {
       </ScrollView>
 
       {dragCard ? <DragGhost card={dragCard} drag={dd.drag} /> : null}
+
+      <HelpOverlay visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Modal visible={addColumnOpen} transparent animationType="fade">
         <View style={styles.modalBackdrop}>

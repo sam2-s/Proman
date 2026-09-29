@@ -48,6 +48,8 @@ interface Props {
   isDragging?: boolean;
   /** Viewers cannot drag — disables the pan gesture. Default true. */
   draggable?: boolean;
+  /** Highlight as keyboard-selected (web). */
+  selected?: boolean;
 }
 
 export function TaskCard({
@@ -64,6 +66,7 @@ export function TaskCard({
   onDrop,
   isDragging,
   draggable = true,
+  selected = false,
 }: Props) {
   const colors = useTheme();
   const styles = makeStyles(colors);
@@ -135,7 +138,12 @@ export function TaskCard({
   return (
     <GestureDetector gesture={pan}>
       <Animated.View
-        style={[styles.card, animatedStyle, isDragging && styles.cardHidden]}
+        style={[
+          styles.card,
+          animatedStyle,
+          isDragging && styles.cardHidden,
+          selected && styles.cardSelected,
+        ]}
         onLayout={(e) => {
           // measureInWindow on native; on web use layout event coords via requestAnimationFrame
           const { x, y, width, height } = e.nativeEvent.layout;
@@ -256,6 +264,10 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
     margin: 0,
     padding: 0,
     borderWidth: 0,
+  },
+  cardSelected: {
+    borderColor: colors.primary,
+    borderWidth: 2,
   },
   ghost: {
     position: 'absolute',
