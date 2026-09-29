@@ -1,7 +1,14 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { api, avatarSrc } from '../api/client';
 import { Avatar } from '../components/Avatar';
 import { Panel } from '../components/Panel';
@@ -22,6 +29,14 @@ export default function ProfileScreen() {
   const { user, logout, refresh } = useAuth();
   const { pref, setPref } = useThemeControls();
   const [uploading, setUploading] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [delOpen, setDelOpen] = useState(false);
+  const [delPw, setDelPw] = useState('');
+  const [delBusy, setDelBusy] = useState(false);
 
   const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.bg },
@@ -64,6 +79,49 @@ export default function ProfileScreen() {
       gap: spacing.sm,
       marginTop: spacing.sm,
     },
+    input: {
+      backgroundColor: colors.bg,
+      borderWidth: 1,
+      borderColor: colors.line,
+      borderRadius: 0,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+      color: colors.text,
+      fontFamily: font.mono,
+      fontSize: 13,
+    },
+    errorText: {
+      fontFamily: font.mono,
+      color: colors.danger,
+      fontSize: 11,
+    },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(15,23,42,0.45)',
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    modalBox: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.danger,
+      padding: spacing.lg,
+      maxWidth: 400,
+      width: '100%',
+      alignSelf: 'center',
+    },
+    modalFrame: {
+      fontFamily: font.mono,
+      fontSize: 11,
+      color: colors.line,
+      marginBottom: spacing.sm,
+    },
+    modalHint: {
+      fontFamily: font.mono,
+      fontSize: 11,
+      color: colors.textMuted,
+      marginBottom: spacing.md,
+    },
   });
 
   async function changeAvatar() {
@@ -85,6 +143,61 @@ export default function ProfileScreen() {
       Alert.alert('Upload failed', e instanceof Error ? e.message : '');
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function changePassword() {
+    setPwError(null);
+    if (newPw.length < 8) {
+      setPwError('new password must be at least 8 characters');
+      return;
+    }
+    setPwBusy(true);
+    try {
+      await api.post('/api/me/password', {
+        current_password: currentPw,
+        new_password: newPw,
+      });
+      setPwOpen(false);
+      setCurrentPw('');
+      setNewPw('');
+      Alert.alert('Password updated');
+    } catch (e) {
+      setPwError(e instanceof Error ? e.message : 'failed');
+    } finally {
+      setPwBusy(false);
+    }
+  }
+
+  function deleteAccount() {
+    Alert.alert(
+      'Delete account?',
+      'This permanently removes your account, projects you own, and all your data.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            setDelPw('');
+            setDelOpen(true);
+          },
+        },
+      ],
+    );
+  }
+
+  async function confirmDelete() {
+    setDelBusy(true);
+    try {
+      await api.del('/api/me', { password: delPw });
+      setDelOpen(false);
+      await logout();
+      router.replace('/login');
+    } catch (e) {
+      Alert.alert('Deletion failed', e instanceof Error ? e.message : '');
+    } finally {
+      setDelBusy(false);
     }
   }
 
@@ -140,6 +253,67 @@ export default function ProfileScreen() {
           </Text>
         </Panel>
 
+        <Panel title="security">
+          <Text style={styles.sectionLabel}>password</Text>
+          {pwOpen ? (
+            <View style={{ gap: spacing.sm }}>
+              <TextInput
+                style={styles.input}
+                placeholder="current password"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry
+                value={currentPw}
+                onChangeText={setCurrentPw}
+                autoCapitalize="none"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="new password (8+ chars)"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry
+                value={newPw}
+                onChangeText={setNewPw}
+                autoCapitalize="none"
+              />
+              {pwError ? <Text style={styles.errorText}>{pwError}</Text> : null}
+              <View style={styles.row}>
+                <TuiButton
+                  label={pwBusy ? '...' : 'save'}
+                  variant="primary"
+                  compact
+                  onPress={changePassword}
+                  disabled={pwBusy || !currentPw || !newPw}
+                />
+                <TuiButton
+                  label="cancel"
+                  variant="ghost"
+                  compact
+                  onPress={() => {
+                    setPwOpen(false);
+                    setPwError(null);
+                  }}
+                />
+              </View>
+            </View>
+          ) : (
+            <TuiButton
+              label="change password"
+              variant="default"
+              compact
+              onPress={() => setPwOpen(true)}
+            />
+          )}
+          <View style={{ marginTop: spacing.md }}>
+            <Text style={styles.sectionLabel}>danger zone</Text>
+            <TuiButton
+              label="delete account"
+              variant="danger"
+              compact
+              onPress={deleteAccount}
+            />
+          </View>
+        </Panel>
+
         <Panel title="session">
           <TuiButton label="log out" variant="danger" onPress={onLogout} />
         </Panel>
@@ -162,6 +336,42 @@ export default function ProfileScreen() {
           { text: pref },
         ]}
       />
+
+      {delOpen && (
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalFrame}>┌─ confirm deletion ──────────</Text>
+            <Text style={styles.modalHint}>
+              enter your password to permanently delete your account
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="password"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
+              value={delPw}
+              onChangeText={setDelPw}
+              autoCapitalize="none"
+            />
+            <View style={styles.row}>
+              <TuiButton
+                label="cancel"
+                variant="ghost"
+                compact
+                onPress={() => setDelOpen(false)}
+              />
+              <TuiButton
+                label={delBusy ? '...' : 'delete forever'}
+                variant="danger"
+                compact
+                onPress={confirmDelete}
+                disabled={delBusy || !delPw}
+              />
+            </View>
+            <Text style={styles.modalFrame}>└────────────────────────────</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

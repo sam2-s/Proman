@@ -84,7 +84,11 @@ export const api = {
       method: 'PATCH',
       body: body !== undefined ? JSON.stringify(body) : undefined,
     }),
-  del: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  del: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: 'DELETE',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
 
   async upload<T>(path: string, file: { name: string; uri: string; type?: string }): Promise<T> {
     const token = await getToken();
