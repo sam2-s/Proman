@@ -7,7 +7,7 @@ use sqlx::Row;
 
 use crate::auth::AuthUser;
 use crate::error::{ApiError, ApiResult};
-use crate::models::{Board, Member, Project};
+use crate::models::{Board, Card, Column, Comment, Member, Project, Subtask};
 use crate::permissions::{require, Role};
 use crate::state::SharedState;
 
@@ -131,6 +131,99 @@ pub async fn detail(
         "project": project,
         "members": members,
         "boards": boards,
+    })))
+}
+
+pub async fn export(
+    State(state): State<SharedState>,
+    AuthUser(user_id): AuthUser,
+    Path(id): Path<i64>,
+) -> ApiResult<Json<Value>> {
+    require(&state, id, user_id, Role::Viewer).await?;
+
+    let project = sqlx::query_as::<_, Project>(
+        "SELECT id, name, description, owner_id, created_at FROM projects WHERE id = ?",
+    )
+    .bind(id)
+    .fetch_optional(&state.db)
+    .await?
+    .ok_or_else(|| ApiError::NotFound("project not found".into()))?;
+
+    let members = sqlx::query_as::<_, Member>(
+        r#"SELECT m.project_id, m.user_id, m.role, u.name, u.username, u.avatar_url
+           FROM project_members m JOIN users u ON u.id = m.user_id
+           WHERE m.project_id = ?"#,
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await?;
+
+    let boards = sqlx::query_as::<_, Board>(
+        "SELECT id, project_id, name, created_at FROM boards WHERE project_id = ? ORDER BY id",
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await?;
+
+    let columns = sqlx::query_as::<_, Column>(
+        r#"SELECT col.id, col.board_id, col.name, col.position
+           FROM columns col
+           JOIN boards b ON b.id = col.board_id
+           WHERE b.project_id = ?
+           ORDER BY col.position"#,
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await?;
+
+    let cards = sqlx::query_as::<_, Card>(
+        r#"SELECT c.id, c.column_id, c.title, c.description, c.priority, c.position,
+                  c.due_date, c.start_date, c.assignee_id, c.created_by, c.created_at, c.updated_at
+           FROM cards c
+           JOIN columns col ON col.id = c.column_id
+           JOIN boards b ON b.id = col.board_id
+           WHERE b.project_id = ?
+           ORDER BY c.position"#,
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await?;
+
+    let subtasks = sqlx::query_as::<_, Subtask>(
+        r#"SELECT s.id, s.card_id, s.title, s.done
+           FROM subtasks s
+           JOIN cards c ON c.id = s.card_id
+           JOIN columns col ON col.id = c.column_id
+           JOIN boards b ON b.id = col.board_id
+           WHERE b.project_id = ?
+           ORDER BY s.id"#,
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await?;
+
+    let comments = sqlx::query_as::<_, Comment>(
+        r#"SELECT cm.id, cm.card_id, cm.user_id, cm.body, cm.created_at, u.name AS author_name
+           FROM comments cm
+           JOIN cards c ON c.id = cm.card_id
+           JOIN columns col ON col.id = c.column_id
+           JOIN boards b ON b.id = col.board_id
+           JOIN users u ON u.id = cm.user_id
+           WHERE b.project_id = ?
+           ORDER BY cm.id"#,
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await?;
+
+    Ok(Json(serde_json::json!({
+        "project": project,
+        "members": members,
+        "boards": boards,
+        "columns": columns,
+        "cards": cards,
+        "subtasks": subtasks,
+        "comments": comments,
     })))
 }
 

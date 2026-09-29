@@ -46,6 +46,7 @@ pub fn router(state: SharedState) -> Router {
             "/api/projects/{id}",
             get(projects::detail).delete(projects::remove),
         )
+        .route("/api/projects/{id}/export", get(projects::export))
         .route("/api/projects/{id}/members", post(projects::add_member))
         .route(
             "/api/projects/{id}/members/{user_id}",
