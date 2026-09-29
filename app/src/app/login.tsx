@@ -1,7 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -22,6 +21,7 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const styles = StyleSheet.create({
     screen: {
@@ -77,11 +77,19 @@ export default function Login() {
     footer: {
       marginTop: spacing.md,
     },
+    error: {
+      fontFamily: font.mono,
+      fontSize: 11,
+      color: colors.danger,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
   });
 
   async function onSubmit() {
+    setError(null);
     if (!username.trim() || !password) {
-      Alert.alert('Missing fields', 'Enter username and password.');
+      setError('enter username and password');
       return;
     }
     setBusy(true);
@@ -89,7 +97,7 @@ export default function Login() {
       await login(username.trim(), password);
       router.replace('/projects');
     } catch (e) {
-      Alert.alert('Sign in failed', e instanceof Error ? e.message : 'Try again');
+      setError(e instanceof Error ? e.message : 'sign in failed');
     } finally {
       setBusy(false);
     }
@@ -139,6 +147,10 @@ export default function Login() {
             onPress={onSubmit}
             disabled={busy}
           />
+
+          {error ? (
+            <Text style={styles.error}>{error}</Text>
+          ) : null}
 
           <View style={styles.links}>
             <Link href="/register" asChild>
