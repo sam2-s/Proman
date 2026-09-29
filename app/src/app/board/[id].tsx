@@ -445,8 +445,9 @@ export default function BoardScreen() {
               contentContainerStyle={{
                 gap: spacing.sm,
                 paddingBottom: spacing.md,
+                flexGrow: 1,
               }}
-              style={{ maxHeight: 560 }}
+              style={{ flex: 1 }}
               scrollEnabled={dd.activeCardId === null}
             >
               {col.cards.map((card, cardIdx) => (
@@ -629,8 +630,8 @@ function makeStyles(colors: ReturnType<typeof useTheme>) {
   columnsRow: {
     padding: spacing.md,
     gap: spacing.md,
-    alignItems: 'flex-start',
-    minHeight: 640,
+    alignItems: 'stretch',
+    flexGrow: 1,
   },
   column: {
     width: 270,
