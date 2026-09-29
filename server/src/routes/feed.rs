@@ -122,6 +122,8 @@ pub async fn mark_all_notifications_read(
 #[derive(Debug, Deserialize)]
 pub struct SearchQuery {
     pub q: Option<String>,
+    pub priority: Option<String>,
+    pub assignee_id: Option<i64>,
 }
 
 /// Search cards (title/description) across projects the user belongs to.
@@ -135,7 +137,7 @@ pub async fn search_cards(
         return Ok(Json(vec![]));
     }
     let pattern = format!("%{}%", term.replace('%', "\\%").replace('_', "\\_"));
-    let rows = sqlx::query(
+    let mut sql = String::from(
         r#"SELECT c.id, c.title, c.priority, c.due_date, c.column_id,
                   col.name AS column_name, b.id AS board_id, b.name AS board_name,
                   p.id AS project_id, p.name AS project_name
@@ -143,16 +145,42 @@ pub async fn search_cards(
            JOIN columns col ON col.id = c.column_id
            JOIN boards b ON b.id = col.board_id
            JOIN projects p ON p.id = b.project_id
-           JOIN project_members m ON m.project_id = p.id AND m.user_id = ?
-           WHERE c.title LIKE ? ESCAPE '\\' OR c.description LIKE ? ESCAPE '\\'
-           ORDER BY c.updated_at DESC
-           LIMIT 40"#,
-    )
-    .bind(user_id)
-    .bind(&pattern)
-    .bind(&pattern)
-    .fetch_all(&state.db)
-    .await?;
+           JOIN project_members m ON m.project_id = p.id AND m.user_id = ?"#,
+    );
+    let mut binds: Vec<String> = Vec::new();
+    let mut need_where = true;
+    if !term.is_empty() {
+        sql.push_str(" WHERE (c.title LIKE ? ESCAPE '\\' OR c.description LIKE ? ESCAPE '\\')");
+        binds.push(pattern.clone());
+        binds.push(pattern.clone());
+        need_where = false;
+    }
+    if let Some(prio) = &q.priority {
+        if !prio.is_empty() {
+            if need_where {
+                sql.push_str(" WHERE c.priority = ?");
+                need_where = false;
+            } else {
+                sql.push_str(" AND c.priority = ?");
+            }
+            binds.push(prio.clone());
+        }
+    }
+    if let Some(aid) = q.assignee_id {
+        if need_where {
+            sql.push_str(" WHERE c.assignee_id = ?");
+        } else {
+            sql.push_str(" AND c.assignee_id = ?");
+        }
+        binds.push(aid.to_string());
+    }
+    sql.push_str(" ORDER BY c.updated_at DESC LIMIT 40");
+
+    let mut query = sqlx::query(&sql).bind(user_id);
+    for b in &binds {
+        query = query.bind(b.clone());
+    }
+    let rows = query.fetch_all(&state.db).await?;
 
     let out: Vec<Value> = rows
         .iter()
