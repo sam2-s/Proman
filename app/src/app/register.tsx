@@ -1,7 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -23,6 +22,7 @@ export default function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const styles = StyleSheet.create({
     screen: {
@@ -79,14 +79,19 @@ export default function Register() {
     footer: {
       marginTop: spacing.md,
     },
+    error: {
+      fontFamily: font.mono,
+      fontSize: 11,
+      color: colors.danger,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
   });
 
   async function onSubmit() {
+    setError(null);
     if (!name.trim() || !username.trim() || password.length < 8) {
-      Alert.alert(
-        'Check fields',
-        'Name, username, and a password of 8+ characters are required.',
-      );
+      setError('name, username, and a password of 8+ characters are required');
       return;
     }
     setBusy(true);
@@ -94,10 +99,7 @@ export default function Register() {
       await register(name.trim(), username.trim(), password);
       router.replace('/projects');
     } catch (e) {
-      Alert.alert(
-        'Registration failed',
-        e instanceof Error ? e.message : 'Try again',
-      );
+      setError(e instanceof Error ? e.message : 'registration failed');
     } finally {
       setBusy(false);
     }
@@ -157,6 +159,10 @@ export default function Register() {
             onPress={onSubmit}
             disabled={busy}
           />
+
+          {error ? (
+            <Text style={styles.error}>{error}</Text>
+          ) : null}
 
           <View style={{ marginTop: spacing.md }}>
             <Link href="/login" asChild>
