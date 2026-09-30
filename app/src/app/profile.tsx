@@ -29,6 +29,7 @@ export default function ProfileScreen() {
   const { user, logout, refresh } = useAuth();
   const { pref, setPref } = useThemeControls();
   const [uploading, setUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [pwOpen, setPwOpen] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -79,6 +80,11 @@ export default function ProfileScreen() {
       gap: spacing.sm,
       marginTop: spacing.sm,
     },
+    errorText: {
+      fontFamily: font.mono,
+      color: colors.danger,
+      fontSize: 11,
+    },
     input: {
       backgroundColor: colors.bg,
       borderWidth: 1,
@@ -90,7 +96,7 @@ export default function ProfileScreen() {
       fontFamily: font.mono,
       fontSize: 13,
     },
-    errorText: {
+    avatarError: {
       fontFamily: font.mono,
       color: colors.danger,
       fontSize: 11,
@@ -125,6 +131,7 @@ export default function ProfileScreen() {
   });
 
   async function changeAvatar() {
+    setAvatarError(null);
     try {
       const res = await DocumentPicker.getDocumentAsync({
         type: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
@@ -140,7 +147,7 @@ export default function ProfileScreen() {
       });
       await refresh();
     } catch (e) {
-      Alert.alert('Upload failed', e instanceof Error ? e.message : '');
+      setAvatarError(e instanceof Error ? e.message : 'upload failed');
     } finally {
       setUploading(false);
     }
@@ -232,6 +239,9 @@ export default function ProfileScreen() {
               disabled={uploading}
               compact
             />
+            {avatarError ? (
+              <Text style={styles.avatarError}>{avatarError}</Text>
+            ) : null}
           </View>
         </Panel>
 
