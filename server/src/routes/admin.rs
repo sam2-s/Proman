@@ -185,3 +185,35 @@ mod tests {
         assert_eq!(status, StatusCode::NO_CONTENT);
     }
 }
+
+#[cfg(test)]
+mod self_guard_tests {
+    use super::*;
+    use crate::test_support;
+
+    #[tokio::test]
+    async fn admin_cannot_revoke_own_admin() {
+        let state = test_support::state().await;
+        let boss = test_support::add_user(&state, "boss").await;
+        test_support::set_global_admin(&state, boss).await;
+
+        let res = set_is_admin(
+            State(state.clone()),
+            AuthUser(boss),
+            Path(boss),
+            Json(UpdateIsAdmin { is_admin: false }),
+        )
+        .await;
+        assert!(matches!(res, Err(ApiError::BadRequest(_))));
+    }
+
+    #[tokio::test]
+    async fn admin_cannot_delete_self() {
+        let state = test_support::state().await;
+        let boss = test_support::add_user(&state, "boss").await;
+        test_support::set_global_admin(&state, boss).await;
+
+        let res = delete_user(State(state.clone()), AuthUser(boss), Path(boss)).await;
+        assert!(matches!(res, Err(ApiError::BadRequest(_))));
+    }
+}

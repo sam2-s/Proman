@@ -145,3 +145,29 @@ pub async fn get_avatar(
     );
     Ok(response)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn image_ext_accepts_valid_types() {
+        assert_eq!(image_ext("image/png"), Some("png"));
+        assert_eq!(image_ext("image/jpeg"), Some("jpg"));
+        assert_eq!(image_ext("image/jpg"), Some("jpg"));
+        assert_eq!(image_ext("image/webp"), Some("webp"));
+        assert_eq!(image_ext("image/gif"), Some("gif"));
+    }
+
+    #[test]
+    fn image_ext_rejects_invalid_types() {
+        assert_eq!(image_ext("text/plain"), None);
+        assert_eq!(image_ext("application/pdf"), None);
+        assert_eq!(image_ext(""), None);
+    }
+
+    #[test]
+    fn max_avatar_is_5mb() {
+        assert_eq!(MAX_AVATAR, 5 * 1024 * 1024);
+    }
+}
