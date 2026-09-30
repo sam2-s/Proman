@@ -120,3 +120,46 @@ pub async fn create(
     .await;
     Ok((StatusCode::CREATED, Json(comment)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support;
+
+    #[tokio::test]
+    async fn viewer_cannot_create_comments() {
+        let state = test_support::state().await;
+        let owner = test_support::add_user(&state, "owner").await;
+        let viewer = test_support::add_user(&state, "viewer").await;
+        let project_id = test_support::add_project(&state, owner).await;
+        test_support::add_member(&state, project_id, viewer, "viewer").await;
+
+        let board_id: i64 =
+            sqlx::query("INSERT INTO boards (project_id, name) VALUES (?, 'Main') RETURNING id")
+                .bind(project_id)
+                .fetch_one(&state.db)
+                .await
+                .expect("insert board")
+                .get("id");
+        let col_id: i64 = sqlx::query(
+            "INSERT INTO columns (board_id, name, position) VALUES (?, 'Todo', 0) RETURNING id",
+        )
+        .bind(board_id)
+        .fetch_one(&state.db)
+        .await
+        .expect("insert column")
+        .get("id");
+        let card_id: i64 = sqlx::query("INSERT INTO cards (column_id, title, description, priority, position) VALUES (?, 'Task', '', 'medium', 0) RETURNING id")
+            .bind(col_id)
+            .fetch_one(&state.db)
+            .await
+            .expect("insert card")
+            .get("id");
+
+        let req = Json(CreateComment {
+            body: "hello".into(),
+        });
+        let res = create(State(state.clone()), AuthUser(viewer), Path(card_id), req).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+    }
+}
