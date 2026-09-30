@@ -54,6 +54,7 @@ fn validate_priority(p: &str) -> ApiResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support;
 
     #[test]
     fn accepts_valid_priorities() {
@@ -65,6 +66,121 @@ mod tests {
     #[test]
     fn rejects_unknown_priority() {
         assert!(validate_priority("critical").is_err());
+    }
+
+    #[tokio::test]
+    async fn viewer_cannot_create_cards() {
+        let state = test_support::state().await;
+        let owner = test_support::add_user(&state, "owner").await;
+        let viewer = test_support::add_user(&state, "viewer").await;
+        let project_id = test_support::add_project(&state, owner).await;
+        test_support::add_member(&state, project_id, viewer, "viewer").await;
+
+        let board_id: i64 =
+            sqlx::query("INSERT INTO boards (project_id, name) VALUES (?, 'Main') RETURNING id")
+                .bind(project_id)
+                .fetch_one(&state.db)
+                .await
+                .expect("insert board")
+                .get("id");
+        let col_id: i64 = sqlx::query(
+            "INSERT INTO columns (board_id, name, position) VALUES (?, 'Todo', 0) RETURNING id",
+        )
+        .bind(board_id)
+        .fetch_one(&state.db)
+        .await
+        .expect("insert column")
+        .get("id");
+
+        let req = Json(CreateCard {
+            title: "test".into(),
+            description: "".into(),
+            priority: "medium".into(),
+            due_date: None,
+            start_date: None,
+            position: None,
+            assignee_id: None,
+        });
+        let res = create(State(state.clone()), AuthUser(viewer), Path(col_id), req).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+    }
+
+    #[tokio::test]
+    async fn viewer_cannot_update_cards() {
+        let state = test_support::state().await;
+        let owner = test_support::add_user(&state, "owner").await;
+        let viewer = test_support::add_user(&state, "viewer").await;
+        let project_id = test_support::add_project(&state, owner).await;
+        test_support::add_member(&state, project_id, viewer, "viewer").await;
+
+        let board_id: i64 =
+            sqlx::query("INSERT INTO boards (project_id, name) VALUES (?, 'Main') RETURNING id")
+                .bind(project_id)
+                .fetch_one(&state.db)
+                .await
+                .expect("insert board")
+                .get("id");
+        let col_id: i64 = sqlx::query(
+            "INSERT INTO columns (board_id, name, position) VALUES (?, 'Todo', 0) RETURNING id",
+        )
+        .bind(board_id)
+        .fetch_one(&state.db)
+        .await
+        .expect("insert column")
+        .get("id");
+        let card_id: i64 = sqlx::query("INSERT INTO cards (column_id, title, description, priority, position) VALUES (?, 'Task', '', 'medium', 0) RETURNING id")
+            .bind(col_id)
+            .fetch_one(&state.db)
+            .await
+            .expect("insert card")
+            .get("id");
+
+        let req = Json(UpdateCard {
+            title: Some("updated".into()),
+            description: None,
+            priority: None,
+            due_date: None,
+            start_date: None,
+            position: None,
+            assignee_id: None,
+            column_id: None,
+        });
+        let res = update(State(state.clone()), AuthUser(viewer), Path(card_id), req).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+    }
+
+    #[tokio::test]
+    async fn viewer_cannot_delete_cards() {
+        let state = test_support::state().await;
+        let owner = test_support::add_user(&state, "owner").await;
+        let viewer = test_support::add_user(&state, "viewer").await;
+        let project_id = test_support::add_project(&state, owner).await;
+        test_support::add_member(&state, project_id, viewer, "viewer").await;
+
+        let board_id: i64 =
+            sqlx::query("INSERT INTO boards (project_id, name) VALUES (?, 'Main') RETURNING id")
+                .bind(project_id)
+                .fetch_one(&state.db)
+                .await
+                .expect("insert board")
+                .get("id");
+        let col_id: i64 = sqlx::query(
+            "INSERT INTO columns (board_id, name, position) VALUES (?, 'Todo', 0) RETURNING id",
+        )
+        .bind(board_id)
+        .fetch_one(&state.db)
+        .await
+        .expect("insert column")
+        .get("id");
+        let card_id: i64 = sqlx::query("INSERT INTO cards (column_id, title, description, priority, position) VALUES (?, 'Task', '', 'medium', 0) RETURNING id")
+            .bind(col_id)
+            .fetch_one(&state.db)
+            .await
+            .expect("insert card")
+            .get("id");
+
+        let res = remove(State(state.clone()), AuthUser(viewer), Path(card_id)).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
     }
 }
 

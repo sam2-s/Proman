@@ -261,3 +261,93 @@ pub async fn delete_column(
     });
     Ok(StatusCode::NO_CONTENT)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support;
+
+    #[tokio::test]
+    async fn viewer_cannot_create_columns() {
+        let state = test_support::state().await;
+        let owner = test_support::add_user(&state, "owner").await;
+        let viewer = test_support::add_user(&state, "viewer").await;
+        let project_id = test_support::add_project(&state, owner).await;
+        test_support::add_member(&state, project_id, viewer, "viewer").await;
+
+        let board_id: i64 =
+            sqlx::query("INSERT INTO boards (project_id, name) VALUES (?, 'Main') RETURNING id")
+                .bind(project_id)
+                .fetch_one(&state.db)
+                .await
+                .expect("insert board")
+                .get("id");
+
+        let req = Json(CreateColumn {
+            name: "New Col".into(),
+            position: None,
+        });
+        let res = create_column(State(state.clone()), AuthUser(viewer), Path(board_id), req).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+    }
+
+    #[tokio::test]
+    async fn viewer_cannot_update_columns() {
+        let state = test_support::state().await;
+        let owner = test_support::add_user(&state, "owner").await;
+        let viewer = test_support::add_user(&state, "viewer").await;
+        let project_id = test_support::add_project(&state, owner).await;
+        test_support::add_member(&state, project_id, viewer, "viewer").await;
+
+        let board_id: i64 =
+            sqlx::query("INSERT INTO boards (project_id, name) VALUES (?, 'Main') RETURNING id")
+                .bind(project_id)
+                .fetch_one(&state.db)
+                .await
+                .expect("insert board")
+                .get("id");
+        let col_id: i64 = sqlx::query(
+            "INSERT INTO columns (board_id, name, position) VALUES (?, 'Todo', 0) RETURNING id",
+        )
+        .bind(board_id)
+        .fetch_one(&state.db)
+        .await
+        .expect("insert column")
+        .get("id");
+
+        let req = Json(UpdateColumn {
+            name: Some("Renamed".into()),
+            position: None,
+        });
+        let res = update_column(State(state.clone()), AuthUser(viewer), Path(col_id), req).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+    }
+
+    #[tokio::test]
+    async fn viewer_cannot_delete_columns() {
+        let state = test_support::state().await;
+        let owner = test_support::add_user(&state, "owner").await;
+        let viewer = test_support::add_user(&state, "viewer").await;
+        let project_id = test_support::add_project(&state, owner).await;
+        test_support::add_member(&state, project_id, viewer, "viewer").await;
+
+        let board_id: i64 =
+            sqlx::query("INSERT INTO boards (project_id, name) VALUES (?, 'Main') RETURNING id")
+                .bind(project_id)
+                .fetch_one(&state.db)
+                .await
+                .expect("insert board")
+                .get("id");
+        let col_id: i64 = sqlx::query(
+            "INSERT INTO columns (board_id, name, position) VALUES (?, 'Todo', 0) RETURNING id",
+        )
+        .bind(board_id)
+        .fetch_one(&state.db)
+        .await
+        .expect("insert column")
+        .get("id");
+
+        let res = delete_column(State(state.clone()), AuthUser(viewer), Path(col_id)).await;
+        assert!(matches!(res, Err(ApiError::Forbidden(_))));
+    }
+}
